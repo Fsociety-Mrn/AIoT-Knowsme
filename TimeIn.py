@@ -20,7 +20,7 @@ class TimeIn(QtWidgets.QFrame):
         super().__init__()
         
         self.setObjectName("Time In")
-        self.resize(822, 519)
+        self.resize(750, 590)
         
         # set up facial detection 
         self.face_detector = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -57,6 +57,9 @@ class TimeIn(QtWidgets.QFrame):
         self.label.setText(_translate("Frame", "TextLabel"))
         self.pushButton.setText(_translate("Frame", "Register "))
         self.pushButton_2.setText(_translate("Frame", "Switch Camera"))
+        
+        # event function
+        self.pushButton.clicked.connect(self.register)
 
     def videoStreaming(self):
         ret, frame = self.videoStream.read()
@@ -86,6 +89,19 @@ class TimeIn(QtWidgets.QFrame):
         qImg = QtGui.QImage(frame.data, width, height, bytesPerLine, QtGui.QImage.Format_BGR888)
         pixmap = QtGui.QPixmap.fromImage(qImg)
         self.label.setPixmap(pixmap)
+
+    # open register
+    def register(self):
+        from Register import Register
+        
+        self.videoStream.release()
+        cv2.destroyAllWindows()
+        
+
+        self.resize(750, 590)
+        Register = Register(self)
+        Register.show()
+        
 
 if __name__ == "__main__":
     

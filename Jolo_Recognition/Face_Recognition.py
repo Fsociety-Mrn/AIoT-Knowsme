@@ -7,7 +7,7 @@ from facenet_pytorch import MTCNN,InceptionResnetV1
 
 
 
-class Face_Recognition:
+class JoloRecognition:
     
     def __init__(self):
 
