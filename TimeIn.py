@@ -20,24 +20,73 @@ class TimeIn(QtWidgets.QFrame):
         super().__init__()
         
         self.setObjectName("Time In")
-        self.resize(750, 590)
+        self.resize(928, 565)
         
         # set up facial detection 
         self.face_detector = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         
+        
+        self.widget = QtWidgets.QWidget(self)
+        self.widget.setGeometry(QtCore.QRect(0, 0, 1031, 571))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        self.widget.setFont(font)
+        self.widget.setStyleSheet("background-color: #faf4f4")
+        self.widget.setObjectName("widget")
+        
         # Video
-        self.label = QtWidgets.QLabel(self)
-        self.label.setGeometry(QtCore.QRect(30, 20, 571, 481))
+        self.label = QtWidgets.QLabel(self.widget)
+        self.label.setGeometry(QtCore.QRect(30, 20, 581, 521))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(24)
+        self.label.setFont(font)
+        self.label.setCursor(QtGui.QCursor(QtCore.Qt.ForbiddenCursor))
+        self.label.setStyleSheet("border:2px solid #1a1313;\n"
+"border-radius : 30%;\n"
+"color: #1a1313;")
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setObjectName("label")
         
         # Register Button
-        self.pushButton = QtWidgets.QPushButton(self)
-        self.pushButton.setGeometry(QtCore.QRect(630, 180, 151, 41))
+        self.pushButton = QtWidgets.QPushButton(self.widget)
+        self.pushButton.setGeometry(QtCore.QRect(660, 220, 221, 51))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(14)
+        self.pushButton.setFont(font)
+        self.pushButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.pushButton.setStyleSheet("border-radius: 20%;\n"
+"border: 2px solid #1a1313;")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("Images/icon-register.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton.setIcon(icon)
+        self.pushButton.setIconSize(QtCore.QSize(32, 32))
+        self.pushButton.setFlat(True)
         self.pushButton.setObjectName("pushButton")
         
         # Switch Camera
-        self.pushButton_2 = QtWidgets.QPushButton(self)
-        self.pushButton_2.setGeometry(QtCore.QRect(630, 230, 151, 41))
+        self.pushButton_2 = QtWidgets.QPushButton(self.widget)
+        self.pushButton_2.setGeometry(QtCore.QRect(660, 290, 221, 51))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(14)
+        self.pushButton_2.setFont(font)
+        self.pushButton_2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.pushButton_2.setStyleSheet("QPushButton {\n"
+"    background: #1a1313;\n"
+"border-radius: 20%;\n"
+"   color: #faf4f4;\n"
+"\n"
+"}\n"
+"QPushButton:hover {\n"
+"    background-color: #1a1313;\n"
+"}")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap("Images/icon-switch-white.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon1)
+        self.pushButton_2.setIconSize(QtCore.QSize(32, 32))
+        self.pushButton_2.setFlat(True)
         self.pushButton_2.setObjectName("pushButton_2")
         
         # to start video streaming
@@ -53,10 +102,11 @@ class TimeIn(QtWidgets.QFrame):
         
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("Frame", "Frame"))
-        self.label.setText(_translate("Frame", "TextLabel"))
-        self.pushButton.setText(_translate("Frame", "Register "))
-        self.pushButton_2.setText(_translate("Frame", "Switch Camera"))
+        self.setWindowTitle(_translate("Frame", ""))
+        self.pushButton.setText(_translate("Frame", "register"))
+        self.pushButton_2.setText(_translate("Frame", "switch"))
+        self.label.setText(_translate("Frame", "Loading"))
+        
         
         # event function
         self.pushButton.clicked.connect(self.register)
@@ -97,8 +147,6 @@ class TimeIn(QtWidgets.QFrame):
         self.videoStream.release()
         cv2.destroyAllWindows()
         
-
-        self.resize(750, 590)
         Register = Register(self)
         Register.show()
         

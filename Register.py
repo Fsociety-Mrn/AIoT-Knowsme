@@ -14,7 +14,7 @@ class Register(QtWidgets.QFrame):
         super().__init__(parent)
         
         self.setObjectName("Frame")
-        self.resize(750, 590)
+        self.resize(928, 565)
         
         # capture status
         self.captureStat = 1
@@ -38,24 +38,65 @@ class Register(QtWidgets.QFrame):
                   }
               """)
         
+        self.widget = QtWidgets.QWidget(self)
+        self.widget.setGeometry(QtCore.QRect(0, 0, 931, 571))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        self.widget.setFont(font)
+        self.widget.setStyleSheet("background-color: #faf4f4;")
+        self.widget.setObjectName("widget")
+        
         # textbox
-        self.lineEdit = QtWidgets.QLineEdit(self)
-        self.lineEdit.setGeometry(QtCore.QRect(50, 60, 541, 31))
+        self.lineEdit = QtWidgets.QLineEdit(self.widget)
+        self.lineEdit.setGeometry(QtCore.QRect(80, 50, 741, 51))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(20)
+        self.lineEdit.setFont(font)
+        self.lineEdit.setStyleSheet("background: transparents;\n"
+"color: #1a1313;\n"
+"background-color: #faf4f4;\n"
+"border: 2px solid #1a1313;\n"
+"border-radius: 20px;")
+        self.lineEdit.setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit.setCursorMoveStyle(QtCore.Qt.VisualMoveStyle)
+        self.lineEdit.setClearButtonEnabled(True)
         self.lineEdit.setObjectName("lineEdit")
         
         # create folder
-        self.pushButton = QtWidgets.QPushButton(self)
-        self.pushButton.setGeometry(QtCore.QRect(610, 60, 81, 31))
+        self.pushButton = QtWidgets.QPushButton(self.widget)
+        self.pushButton.setGeometry(QtCore.QRect(830, 50, 61, 51))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        self.pushButton.setFont(font)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("Images/icon-create.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton.setIcon(icon)
+        self.pushButton.setIconSize(QtCore.QSize(50, 50))
+        self.pushButton.setFlat(True)
         self.pushButton.setObjectName("pushButton")
         
         # label
-        self.label = QtWidgets.QLabel(self)
-        self.label.setGeometry(QtCore.QRect(60, 110, 621, 20))
-        self.label.setObjectName("label")
+        self.label = QtWidgets.QLabel(self.widget)
+        self.label.setGeometry(QtCore.QRect(140, 110, 631, 31))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(18)
+        self.label.setFont(font)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setObjectName("label_2")
         
         # video streaming
-        self.video = QtWidgets.QLabel(self)
-        self.video.setGeometry(QtCore.QRect(60, 160, 621, 361))
+        self.video = QtWidgets.QLabel(self.widget)
+        self.video.setGeometry(QtCore.QRect(130, 150, 651, 391))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(14)
+        self.video.setFont(font)
+        self.video.setStyleSheet("border:2px solid #1a1313;\n"
+"border-radius : 30%;\n"
+"color: #1a1313;")
+        self.video.setAlignment(QtCore.Qt.AlignCenter)
         self.video.setObjectName("label")
         
         # facial register
@@ -64,9 +105,21 @@ class Register(QtWidgets.QFrame):
         self.pushButton_2.setObjectName("pushButton_2")
         
         # back button
-        self.backButton = QtWidgets.QPushButton(self)
-        self.backButton.setGeometry(QtCore.QRect(20, 20, 81, 31))
-        self.backButton.setObjectName("pushButton")
+        self.backButton = QtWidgets.QPushButton(self.widget)
+        self.backButton.setGeometry(QtCore.QRect(10, 10, 51, 51))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(12)
+        self.backButton.setFont(font)
+        self.backButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+#         self.backButton.setStyleSheet("border-radius: 20%;\n"
+# "border: 2px solid #1a1313;")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap("Images/icon-back.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.backButton.setIcon(icon1)
+        self.backButton.setIconSize(QtCore.QSize(50, 50))
+        self.backButton.setFlat(True)
+        self.backButton.setObjectName("pushButton_3")
         
         # video streaming start
         self.videoStream = cv2.VideoCapture(0)
@@ -86,12 +139,12 @@ class Register(QtWidgets.QFrame):
         
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("Frame", "Frame"))
-        self.pushButton.setText(_translate("Frame", "create folder"))
-        self.backButton.setText(_translate("Frame", "back to login"))
-        self.label.setText(_translate("Frame", "wait"))
+        self.setWindowTitle(_translate("Frame", ""))
+        self.pushButton.setText(_translate("Frame", ""))
+        self.backButton.setText(_translate("Frame", ""))
+        self.label.setText(_translate("Frame", ""))
         self.video.setText(_translate("Frame", "Camera is loading"))
-        
+        self.lineEdit.setPlaceholderText(_translate("Frame", "Please input your name"))
         self.pushButton_2.setText(_translate("Frame", "Facial Register"))
         self.pushButton_2.setDisabled(True)
         
