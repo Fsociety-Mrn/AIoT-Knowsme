@@ -83,13 +83,10 @@ class JoloRecognition:
                     if min_dist < threshold:
                         
                         idx_min = match_list.index(min_dist)
-                        
-                        print(self.Name_List[idx_min],percent)
-                        
-          
+
                         return (self.Name_List[idx_min], percent)
                     else:
-               
+                        
                         return ('No match detected', None)
                 
                 else:
@@ -118,7 +115,7 @@ class JoloRecognition:
             loader = DataLoader(
                 dataset,
                 collate_fn=collate_fn, 
-                batch_size=20,
+                # batch_size=20,
                 pin_memory=True)
 
         # create empty lists for storing embeddings and names
@@ -156,4 +153,4 @@ class JoloRecognition:
 # uncomment this code kapag magnual training ka, 
 # or kapag may dinelete kang folder
 
-# print(Face_Recognition().Face_Train())
+# print(JoloRecognition().Face_Train())

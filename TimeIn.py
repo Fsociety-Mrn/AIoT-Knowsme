@@ -9,6 +9,7 @@
 
 import cv2
 
+from Jolo_Recognition.Face_Recognition import JoloRecognition as Jolo
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QPushButton, QLineEdit
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -24,7 +25,7 @@ class TimeIn(QtWidgets.QFrame):
         
         # set up facial detection 
         self.face_detector = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        
+        self.B,self.G,self.R = (0,255,255)
         
         self.widget = QtWidgets.QWidget(self)
         self.widget.setGeometry(QtCore.QRect(0, 0, 1031, 571))
@@ -48,9 +49,61 @@ class TimeIn(QtWidgets.QFrame):
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setObjectName("label")
         
+        # Time and Date
+        self.Time_label = QtWidgets.QLabel(self.widget)
+        self.Time_label.setGeometry(QtCore.QRect(620, 80, 301, 71))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(36)
+        self.Time_label.setFont(font)
+        self.Time_label.setStyleSheet("background-color: rgba(255, 255, 255, 0);\n"
+"color: #1a1313;")
+        self.Time_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.Time_label.setObjectName("Time_label")
+        
+        self.Date_label = QtWidgets.QLabel(self.widget)
+        self.Date_label.setGeometry(QtCore.QRect(620, 140, 301, 31))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(14)
+        self.Date_label.setFont(font)
+        self.Date_label.setStyleSheet("background-color: rgba(255, 255, 255, 0);\n"
+"color: #1a1313;")
+        self.Date_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.Date_label.setObjectName("Date_label")
+        
+        
+        # Employee Name and ID label
+        self.Result_label = QtWidgets.QLabel(self.widget)
+        self.Result_label.setGeometry(QtCore.QRect(620, 220, 301, 41))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(16)
+        font.setBold(False)
+        font.setWeight(50)
+        self.Result_label.setFont(font)
+        self.Result_label.setStyleSheet("background-color: rgba(255, 255, 255, 0);\n"
+"color: #1a1313;")
+        self.Result_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.Result_label.setObjectName("Result_label")
+        
+        self.Id_label = QtWidgets.QLabel(self.widget)
+        self.Id_label.setGeometry(QtCore.QRect(620, 250, 301, 31))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(12)
+        font.setBold(False)
+        font.setWeight(50)
+        self.Id_label.setFont(font)
+        self.Id_label.setStyleSheet("background-color: rgba(255, 255, 255, 0);\n"
+"color: #1a1313;")
+        self.Id_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.Id_label.setObjectName("Id_label")        
+        
+        
         # Register Button
         self.pushButton = QtWidgets.QPushButton(self.widget)
-        self.pushButton.setGeometry(QtCore.QRect(660, 220, 221, 51))
+        self.pushButton.setGeometry(QtCore.QRect(660, 320, 221, 51))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(14)
@@ -67,7 +120,7 @@ class TimeIn(QtWidgets.QFrame):
         
         # Switch Camera
         self.pushButton_2 = QtWidgets.QPushButton(self.widget)
-        self.pushButton_2.setGeometry(QtCore.QRect(660, 290, 221, 51))
+        self.pushButton_2.setGeometry(QtCore.QRect(660, 390, 221, 51))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(14)
@@ -93,9 +146,20 @@ class TimeIn(QtWidgets.QFrame):
         self.videoStream = cv2.VideoCapture(0)
         self.videoStream.set(4, 1080)
         
-        self.timer = QtCore.QTimer(self)
-        self.timer.timeout.connect(self.videoStreaming)
-        self.timer.start(30)
+        self.video_stream = QtCore.QTimer(self)
+        self.video_stream.timeout.connect(self.videoStreaming)
+        self.video_stream.start(30)
+         
+        # start facial recogniton every seconds
+        self.facial_recog = QtCore.QTimer(self)
+        self.facial_recog.timeout.connect(self.runFacialRecognition)
+        self.facial_recog.start(1000)  # Trigger every 1 seconds
+
+        # get time and date
+        self.timedate = QtCore.QTimer(self)
+        self.timedate.timeout.connect(self.date_and_time)
+        self.timedate.start(0)  
+
 
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
@@ -106,11 +170,39 @@ class TimeIn(QtWidgets.QFrame):
         self.pushButton.setText(_translate("Frame", "register"))
         self.pushButton_2.setText(_translate("Frame", "switch"))
         self.label.setText(_translate("Frame", "Loading"))
-        
-        
+        self.Time_label.setText(_translate("Frame", "12:00 PM"))
+        self.Date_label.setText(_translate("Frame", "January 73 2024")) 
+        self.Result_label.setText(_translate("Frame", "Engr. Jerico Biag"))
+        self.Id_label.setText(_translate("Frame", "Employee ID: 2019-201745"))
+
         # event function
         self.pushButton.clicked.connect(self.register)
+    
+    def videoStreamingStart(self):
+        self.videoStream = cv2.VideoCapture(0)
+        self.videoStream.set(4, 1080)
+        
+    def runFacialRecognition(self):
+        ret, frame = self.videoStream.read()
+        
+        if not ret:
+            return
+        
+        # load facial detection
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = self.face_detector.detectMultiScale(gray,
+                                                    scaleFactor=1.1,
+                                                    minNeighbors=20,
+                                                    minSize=(100, 100),
+                                                    flags=cv2.CASCADE_SCALE_IMAGE)
+        # verify it has faces
+        for (x, y, w, h) in faces:    
+            return self.FacialRecognition(frame=frame)  # Assuming your FacialRecognition function accepts a frame
 
+        self.Result_label.setText("loading")
+        self.Id_label.setText("Employee ID: n/a")
+        self.B,self.G,self.R = (0,255,255)
+        
     def videoStreaming(self):
         ret, frame = self.videoStream.read()
         
@@ -127,11 +219,12 @@ class TimeIn(QtWidgets.QFrame):
         faces = self.face_detector.detectMultiScale(gray,
                                                     scaleFactor=1.1,
                                                     minNeighbors=20,
-                                                    minSize=(180, 180),
+                                                    minSize=(100, 100),
                                                     flags=cv2.CASCADE_SCALE_IMAGE)
         
         for (x, y, w, h) in faces:      
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (0,255,0), 2)
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (self.B,self.G,self.R), 2)
+            
         
         # display the frame on the label
         height, width, channel = frame.shape
@@ -139,7 +232,7 @@ class TimeIn(QtWidgets.QFrame):
         qImg = QtGui.QImage(frame.data, width, height, bytesPerLine, QtGui.QImage.Format_BGR888)
         pixmap = QtGui.QPixmap.fromImage(qImg)
         self.label.setPixmap(pixmap)
-
+        
     # open register
     def register(self):
         from Register import Register
@@ -149,6 +242,37 @@ class TimeIn(QtWidgets.QFrame):
         
         Register = Register(self)
         Register.show()
+        
+    #  facial recognition function
+    def FacialRecognition(self, frame):
+        try:
+     
+            result = Jolo().Face_Compare(frame)
+        
+            current_date = QtCore.QDate.currentDate().toString("MMMM dd yyyy")
+            current_time = QtCore.QTime.currentTime().toString("h:mm:ss AP")
+         
+            self.R,self.G,self.B = (255,0,0) if result[0] == 'No match detected' else (0,255,0)
+            status = False if result[0] == 'No match detected' else True
+            
+            self.Result_label.setText(result[0])
+            self.Id_label.setText("Employee ID: n/a" if result[0] == 'No match detected' else "Employee ID: 2019-201745" )
+            return status
+        
+        except:
+            pass
+            return False
+    
+    # Date and Time
+    def date_and_time(self):
+        current_date = QtCore.QDate.currentDate().toString("MMMM dd yyyy")
+        
+        current_time = QtCore.QTime.currentTime().toString("h:mm AP")
+    
+        
+        self.Time_label.setText(current_time)
+        self.Date_label.setText(current_date)
+        
         
 
 if __name__ == "__main__":

@@ -13,6 +13,7 @@ class Register(QtWidgets.QFrame):
     def __init__(self,parent):
         super().__init__(parent)
         
+        self.mainmenu = parent
         self.setObjectName("Frame")
         self.resize(928, 565)
         
@@ -150,6 +151,7 @@ class Register(QtWidgets.QFrame):
         
         # event functions
         self.pushButton.clicked.connect(self.create_folder)
+        self.backButton.clicked.connect(self.bButton)
         
         
     # creating folder name
@@ -288,6 +290,7 @@ class Register(QtWidgets.QFrame):
             self.pushButton_2.setDisabled(True)
             return True
 
+    # Facial Training
     def facialTraining(self):
         
         self.timer.stop()
@@ -312,7 +315,10 @@ class Register(QtWidgets.QFrame):
         icon = self.MessageBox.Information
         self.messageBoxShow(title=title, text=text, buttons=self.MessageBox.Ok, icon=icon)
         
-
+    # backt to main
+    def bButton(self):
+        self.mainmenu.videoStreamingStart()
+        self.close()
 
 if __name__ == "__main__":
     
