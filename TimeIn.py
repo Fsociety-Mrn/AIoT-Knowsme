@@ -40,7 +40,7 @@ class TimeIn(QtWidgets.QFrame):
         self.label.setGeometry(QtCore.QRect(30, 20, 581, 521))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
-        font.setPointSize(24)
+        font.setPointSize(18)
         self.label.setFont(font)
         self.label.setCursor(QtGui.QCursor(QtCore.Qt.ForbiddenCursor))
         self.label.setStyleSheet("border:2px solid #1a1313;\n"
@@ -160,7 +160,9 @@ class TimeIn(QtWidgets.QFrame):
         self.timedate.timeout.connect(self.date_and_time)
         self.timedate.start(0)  
 
-
+        # switch cam status
+        self.camera = False
+        
         self.retranslateUi()
         QtCore.QMetaObject.connectSlotsByName(self)
         
@@ -177,6 +179,7 @@ class TimeIn(QtWidgets.QFrame):
 
         # event function
         self.pushButton.clicked.connect(self.register)
+        self.pushButton_2.clicked.connect(self.switch_camera)
     
     def videoStreamingStart(self):
         self.videoStream = cv2.VideoCapture(0)
@@ -208,7 +211,7 @@ class TimeIn(QtWidgets.QFrame):
         
         # if no detected frames
         if not ret:
-            self.label.setText("Please wait camera is loading")
+            self.label.setText("Oops! We can't find your camera.\nMake sure it's plugged in and there are no issues.")
             return
         
         frame = cv2.flip(frame, 1)
@@ -272,7 +275,18 @@ class TimeIn(QtWidgets.QFrame):
         
         self.Time_label.setText(current_time)
         self.Date_label.setText(current_date)
+    
+    # switch camera
+    def switch_camera(self):
+        self.video_stream.stop()
+        self.videoStream.release()
+
         
+        self.camera ^= True
+        index = int(self.camera)
+        
+        self.videoStream = cv2.VideoCapture(index)
+        self.video_stream.start(30)
         
 
 if __name__ == "__main__":
