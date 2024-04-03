@@ -15,6 +15,8 @@ app.config["FACE_RESULT"] = "",""
 app.config["CAMERA_STATUS"] = "cameara is loading"
 app.config["BGR"] = 0,255,255
 
+app.config["BGR_timeIn"] = 0,255,255
+
 # face detection
 faceDetection = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
@@ -37,7 +39,82 @@ def allowed_file(filename):
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
         
         
-# face recognition api
+# face recognition api | Time in
+@app.route('/face_recognition', methods=['POST'])
+def face_recognition():
+    
+    file = request.files['file']
+    data = request.form.get('data')
+    
+    
+    # check file if exist
+    if file and allowed_file(file.filename):
+        
+        # check if file name is not malicious
+        filename = secure_filename(file.filename)
+        
+        # save the file
+        file.save(os.path.join('Static/time_in', filename))
+
+        # read sending file via cv2
+        file = cv2.imread(os.path.join('Static/time_in', filename))
+
+        gray = cv2.cvtColor(file, cv2.COLOR_BGR2GRAY)
+        
+        # Detect faces in the frame
+        faces = faceDetection.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(100, 100), flags=cv2.CASCADE_SCALE_IMAGE)
+
+        # Check if faces are detected 
+        if len(faces) == 0:
+            app.config["BGR_timeIn"] = 0,255,255
+            return jsonify({
+                "name": ("No face is detected",""),
+                "RGB" : str(app.config["BGR_timeIn"])
+            }), 200
+        
+        # facial reconition
+        result = JL().Face_Compare(face=file,threshold=0.6)
+        
+        
+        print("time in result: ",result)
+        # Get current date and time
+        current_datetime = datetime.now()
+
+        # Format date as "Month Day Year" (e.g., "April 03 2024")
+        formatted_date = current_datetime.strftime("%B %d %Y")
+
+        # Format time as "Hour:Minute AM/PM" (e.g., "1:52 PM")
+        formatted_time = current_datetime.strftime("%I:%M %p")
+        
+        Fbase().firebaseUpdate(
+            keyName=formatted_date,
+            name=result[0],
+            data=data,
+            time=formatted_time)
+        
+        app.config["BGR_timeIn"] = 0,0,255
+            
+        if not result[0] == 'No match detected':
+            app.config["FACE_RESULT"] = result
+            app.config["BGR_timeIn"] = 0,255,0
+        
+        
+    
+        # return the result
+        return jsonify({
+                "name": result        ,
+                "RGB" : str(app.config["BGR_timeIn"])
+            }),200
+    else:
+        
+        # invalid file
+        return jsonify({
+                "name": result,
+                "RGB" : str(app.config["BGR"])
+            }),401
+        
+
+# face recognition api | Time out
 @app.route('/face-recognition', methods=['POST'])
 def upload_file():
     
@@ -62,13 +139,20 @@ def upload_file():
         # Detect faces in the frame
         faces = faceDetection.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(100, 100), flags=cv2.CASCADE_SCALE_IMAGE)
 
-        # Check if faces are detected
+        # Check if faces are detected 
         if len(faces) == 0:
-            return jsonify("No face detected"), 200
+            app.config["BGR"] = 0,255,255
+            return jsonify({
+                "name": ("No face is detected",""),
+                "RGB" : str(app.config["BGR"])
+            }), 200
         
         # facial reconition
         result = JL().Face_Compare(face=file,threshold=0.6)
         
+        
+        
+        print("time out result: ",result)
         # Get current date and time
         current_datetime = datetime.now()
 
@@ -81,7 +165,8 @@ def upload_file():
         Fbase().firebaseUpdate(
             keyName=formatted_date,
             name=result[0],
-            data={formatted_time: data})
+            data=data,
+            time=formatted_time)
         
         app.config["FACE_RESULT"] = "No match detected", ""
         app.config["BGR"] = 0,0,255
@@ -93,11 +178,17 @@ def upload_file():
         
     
         # return the result
-        return jsonify(result[0]),200
+        return jsonify({
+                "name": result        ,
+                "RGB" : str(app.config["BGR"])
+            }),200
     else:
         
         # invalid file
-        return jsonify({result[0]}),401
+        return jsonify({
+                "name": result,
+                "RGB" : str(app.config["BGR"])
+            }),401
         
 
 # Facial Detection =========================================== #
@@ -147,7 +238,7 @@ def Facial_Detection(camera=None, face_detector=None):
             start_time = time.time()
             
             # Check if 2 seconds have elapsed since the last send
-            if timer >= 5:
+            if timer >= 3:
                 app.config["BGR"] = 0,255,255
                 app.config["FACE_RESULT"] = "",""
                 

@@ -37,11 +37,11 @@
             justify-content:  flex-start;
             align-items: center;
             margin-top: 20px;
-            grid-column: span 4;
+            grid-column: span 6;
         }
 
         .container:nth-child(1) {
-            grid-column: span 8; /* First container spans 8 columns */
+            grid-column: span 6; /* First container spans 8 columns */
         }
 
         /* Additional styling for the elements inside the container */
@@ -133,7 +133,7 @@
                 .then(data => {
                     // Handle facial recognition result here
                     console.log(data);
-                    document.getElementById('result').textContent  = data;
+                    document.getElementById('result').textContent  = data.name[0];
                 })
                 .catch(error => {
                     console.error('Error:', error);
