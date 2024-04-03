@@ -75,7 +75,7 @@
     <!-- First row -->
     <div class="container">
         <h1 id="facialStatus">AIoT Knows Me</h1>
-        <h6 id="facialStatus">Time Out</h6>
+        <h6 id="facialStatus">Time In</h6>
         <img id="video" src="{{ url_for('video_feed') }}"/>
     </div>
     
@@ -110,7 +110,7 @@
         canvas.toBlob(function(blob) {
 
             if (blob) { // Check if blob is not null or undefined
-                
+
                 // Create FormData object and append the blob
                 var formData = new FormData();
                 formData.append('file', blob, 'image.jpg');
