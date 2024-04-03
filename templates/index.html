@@ -84,13 +84,38 @@
         <h1 id="time">11:00 am</h1>
         <h6 id="date">April 3 2024</h6>
         <p id="result">Engr. Jerico Biag</p>
-
-        <!-- <button onclick="captureAndUpload()">Engr. Jerico Biag</button> -->
     </div>
 </div>
 
 <script>
-
+    
+    // Update status
+    async function update_status(data) {
+    // Send POST request to backend API
+                await fetch('/update_status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Failed to upload file');
+                    }
+                })
+                .then(data => {
+                    // Handle facial recognition result here
+                    console.log(data);
+                    
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+    }
+    
     // Facial Recognition
     function captureAndUpload() {
         var video = document.getElementById('video');
@@ -110,16 +135,17 @@
         canvas.toBlob(function(blob) {
 
             if (blob) { // Check if blob is not null or undefined
-
+               
+                
                 // Create FormData object and append the blob
                 var formData = new FormData();
                 formData.append('file', blob, 'image.jpg');
 
                 // Append additional data
-                formData.append('data', 'Time Out');
+                formData.append('data', 'Time In');
     
                 // Send POST request to backend API
-                fetch('/face-recognition', {
+                fetch('http://192.168.100.38:1000/face_recognition', {
                     method: 'POST',
                     body: formData
                 })
@@ -132,8 +158,10 @@
                 })
                 .then(data => {
                     // Handle facial recognition result here
-                    console.log(data);
-                    document.getElementById('result').textContent  = data;
+                    //console.log(data);
+                    
+                    update_status(data)
+                    document.getElementById('result').textContent  = data.name[0];
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -173,7 +201,7 @@
 
     // Call updateTimeAndDate function to initialize
     updateTimeAndDate();
-    captureAndUpload();
+    // captureAndUpload();
 
     // Update time and date every second
     setInterval(updateTimeAndDate(), 1000);
