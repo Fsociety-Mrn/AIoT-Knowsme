@@ -122,7 +122,6 @@ class JoloRecognition:
             loader = DataLoader(
                 dataset,
                 collate_fn=collate_fn, 
-                # batch_size=20,
                 pin_memory=True)
 
         # create empty lists for storing embeddings and names
@@ -150,11 +149,11 @@ class JoloRecognition:
 
         # save the calculated face distance into data.pt
             torch.save(data, location + '/data.pt')
-            return "Successfully trained"
+            return "Successfully trained",True
 
         except Exception as e:
             print(f"Error occurred while training the model: {str(e)}")
-            return "Error occurred while training the model"
+            return "Error occurred while training the model",False
         
         
 # uncomment this code kapag magnual training ka, 

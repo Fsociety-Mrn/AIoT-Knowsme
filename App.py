@@ -8,6 +8,7 @@ from Firebase.firebase import Firebase as Fbase
 import cv2
 import os
 import time
+import shutil
 
 app = Flask(__name__)
 CORS(app)
@@ -30,7 +31,6 @@ app.config['MIMETYPES'] = {'image/png', 'image/jpeg', 'image/gif', 'image/svg+xm
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 
-
 # API backend =========================================== #
 
 # validate the extentsion
@@ -38,14 +38,12 @@ def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
         
-        
 # face recognition api | Time in
 @app.route('/face_recognition', methods=['POST'])
 def face_recognition():
     
     file = request.files['file']
     data = request.form.get('data')
-    
     
     # check file if exist
     if file and allowed_file(file.filename):
@@ -113,7 +111,6 @@ def face_recognition():
                 "RGB" : str(app.config["BGR"])
             }),401
         
-
 # face recognition api | Time out
 @app.route('/face-recognition', methods=['POST'])
 def upload_file():
@@ -189,7 +186,84 @@ def upload_file():
                 "name": result,
                 "RGB" : str(app.config["BGR"])
             }),401
+
+# name register 
+@app.route('/name_register', methods=['POST']) 
+def name_register():
+    
+    # Get the first and last name from the request body
+    name = request.json
+
+    # Check that both first and last name are provided
+    if not name['name']:
+        return jsonify({"message": 'enter your fullname'}), 400
+
+    # Define the name of the folder you want to create
+    folder_name = f"{str(name['name']).capitalize()}"
+
+    # Define the path to the folder you want to create
+    path = f"Jolo_Recognition/Registered-Faces/{folder_name}"
+
+    # Check if the folder already exists
+    if os.path.exists(path):
+        # Remove all contents of the folder
+        shutil.rmtree(path)
+
+    os.makedirs(path)
+    app.config['REGISTER_FACIAL'] = path
         
+    # Return a success message
+    return jsonify({"message": f"Folder {path} created successfully"}), 200
+
+# facial register 
+@app.route('/face_register', methods=['POST'])
+def face_register(): 
+    # Check if a file was uploaded
+    file = request.files.get('file')
+    
+    if not file:
+        return jsonify({'No file in request'}), 400
+
+    # Check if the file is allowed
+    if not allowed_file(file.filename):
+        return jsonify({'error': 'Invalid file type. Allowed file types are png, jpeg, jpg, gif.'}), 400
+
+    # save the images if the folder of user is not 20
+    if not len(os.listdir(app.config['REGISTER_FACIAL'])) == 20:
+        
+        # Save the file
+        filename = secure_filename(file.filename)
+        
+        # Detect faces in the frame
+        file.save(os.path.join('Static/time_in', filename))
+        files = cv2.imread(os.path.join('Static/time_in', filename))
+        gray = cv2.cvtColor(files, cv2.COLOR_BGR2GRAY)
+        faces = faceDetection.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(100, 100), flags=cv2.CASCADE_SCALE_IMAGE)
+        
+        # Check if faces are detected 
+        if len(faces) == 0:
+       
+            return jsonify({
+                "message":"Align your Face Properly", 
+                "result": False
+            })
+        
+        # file_path = os.path.join(app.config['REGISTER_FACIAL'], f"{int(len(os.listdir(app.config['REGISTER_FACIAL']))) + 1}.jpg")
+        # file.save(file_path)
+        
+        cv2.imwrite(f"{app.config['REGISTER_FACIAL']}/{int(len(os.listdir(app.config['REGISTER_FACIAL']))) + 1}.png", files)
+   
+        return jsonify({
+            "message":f"{20 - int(len(os.listdir(app.config['REGISTER_FACIAL'])))} left capture images", 
+            "result": False
+            })
+
+    return jsonify({"message":"File saved successfully","result": True})
+
+@app.route('/facial_training', methods=['GET'])
+def facial_training():
+    result = JL().Face_Train()
+    return jsonify(result),200
 
 # Facial Detection =========================================== #
 @app.route('/video_feed')
@@ -217,7 +291,7 @@ def Facial_Detection(camera=None, face_detector=None):
             app.config["CAMERA_STATUS"] = "camera is not detected"
             break
         
-     
+    
 
         frame = cv2.flip(frame,1)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -261,11 +335,20 @@ def Facial_Detection(camera=None, face_detector=None):
                 b'Content-Type: image/jpeg\r\n\r\n' + frame_encoded.tobytes() + b'\r\n')
 
 
-
 # homepage =========================================== #
 @app.route('/')
 def index():
     return render_template('index.html')
+
+# facial register =========================================== #
+@app.route('/facial_register')
+def facial_register():
+    return render_template('facial_register.html')
+
+# facial register =========================================== #
+@app.route('/face_training')
+def face_training_():
+    return render_template('face_training.html')
 
 if __name__ == '__main__':
     app.run(
