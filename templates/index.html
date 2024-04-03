@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIoT Knows Me</title>
+    <style>
+
+        /* Specify font families */
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        /* Style for the entire container */
+        .container-wrapper {
+            display: flex;
+            flex-direction: row; /* Stack the containers vertically */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 10px;
+            grid-column: span 12; 
+        }
+        
+        /* Style for each row container */
+        .container {
+            display: flex;
+            flex-direction: column; /* Align items horizontally */
+            justify-content:  flex-start;
+            align-items: center;
+            margin-top: 20px;
+            grid-column: span 4;
+        }
+
+        .container:nth-child(1) {
+            grid-column: span 8; /* First container spans 8 columns */
+        }
+
+        /* Additional styling for the elements inside the container */
+        .container > * {
+            margin: 0 10px;
+        }
+
+        video {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+ 
+        h1 {
+            font-size: 30px;
+        } 
+
+        h6 {
+            font-size: 24px;
+        } 
+
+        p {
+            font-size: 20px;
+        } 
+    </style>
+</head>
+<body>
+
+<div class="container-wrapper">
+    <!-- First row -->
+    <div class="container">
+        <h1 id="facialStatus">AIoT Knows Me</h1>
+        <h6 id="facialStatus">Time Out</h6>
+        <img id="video" src="{{ url_for('video_feed') }}"/>
+    </div>
+    
+    <!-- Second row -->
+    <div class="container">
+        <h1 id="time">11:00 am</h1>
+        <h6 id="date">April 3 2024</h6>
+        <p id="result">Engr. Jerico Biag</p>
+
+        <!-- <button onclick="captureAndUpload()">Engr. Jerico Biag</button> -->
+    </div>
+</div>
+
+<script>
+
+    // Facial Recognition
+    function captureAndUpload() {
+        var video = document.getElementById('video');
+        var canvas = document.createElement('canvas');
+        var context = canvas.getContext('2d');
+    
+        // document.getElementById('result').textContent  = "...";
+    
+        // Set canvas dimensions to match the image dimensions
+        canvas.width = video.width;
+        canvas.height = video.height;
+    
+        // Draw the image onto the canvas
+        context.drawImage(video, 0, 0, video.width, video.height);
+    
+        // Convert canvas to blob (image file)
+        canvas.toBlob(function(blob) {
+
+            if (blob) { // Check if blob is not null or undefined
+                
+                // Create FormData object and append the blob
+                var formData = new FormData();
+                formData.append('file', blob, 'image.jpg');
+
+                // Append additional data
+                formData.append('data', 'Time Out');
+    
+                // Send POST request to backend API
+                fetch('/face-recognition', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Failed to upload file');
+                    }
+                })
+                .then(data => {
+                    // Handle facial recognition result here
+                    console.log(data);
+                    document.getElementById('result').textContent  = data;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            } else {
+                console.error('Failed to generate blob');
+            }
+        }, 'image/jpeg'); // Specify image format (e.g., JPEG)
+    }
+
+    
+
+    // Function to update time and date
+    function updateTimeAndDate() {
+        var currentDate = new Date();
+
+        // Format time
+        var hours = currentDate.getHours();
+        var minutes = currentDate.getMinutes();
+        var ampm = hours >= 12 ? 'pm' : 'am';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        var timeString = hours + ':' + minutes + ' ' + ampm;
+
+        // Format date
+        var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        var month = months[currentDate.getMonth()];
+        var day = currentDate.getDate();
+        var year = currentDate.getFullYear();
+        var dateString = month + ' ' + (day < 10 ? '0' + day : day) + ' ' + year;
+
+        // Set time and date in HTML
+        document.getElementById('time').textContent = timeString;
+        document.getElementById('date').textContent = dateString;
+    }
+
+    // Call updateTimeAndDate function to initialize
+    updateTimeAndDate();
+    captureAndUpload();
+
+    // Update time and date every second
+    setInterval(updateTimeAndDate(), 1000);
+
+    // run facial recognition every 500 milisecond
+    setInterval(captureAndUpload, 1000);
+</script>
+
+</body>
+</html>
