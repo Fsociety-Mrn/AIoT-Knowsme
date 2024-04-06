@@ -32,7 +32,12 @@ ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 
 # API backend =========================================== #
-
+# @app.route('/Temperature', methods=['GET'])
+# def Temperature():
+#     targetTemp = "{:.2f}".format(mlx.object_temperature)
+#     app.config['UPLOAD_FOLDER'] = targetTemp
+#     return jsonify({data: targetTemp})
+    
 # validate the extentsion
 def allowed_file(filename):
     return '.' in filename and \
@@ -44,7 +49,12 @@ def face_recognition():
     
     file = request.files['file']
     data = request.form.get('data')
+    temp = request.form.get('temp')
     
+    print("Temperature: ", temp)
+    
+    temp = temp.replace(" ","")
+  
     # check file if exist
     if file and allowed_file(file.filename):
         
@@ -65,16 +75,26 @@ def face_recognition():
         # Check if faces are detected 
         if len(faces) == 0:
             app.config["BGR_timeIn"] = 0,255,255
+            print('time in')
             return jsonify({
                 "name": ("No face is detected",""),
                 "RGB" : str(app.config["BGR_timeIn"])
             }), 200
+            
+        if float(temp) > 37:
+            app.config["BGR_timeIn"] = 0,0,255
+            print('time in')
+            return jsonify({
+                "name": ("Please wait, your temperature is high",""),
+                "RGB" : str(app.config["BGR_timeIn"])
+            }), 200
+            
         
         # facial reconition
         result = JL().Face_Compare(face=file,threshold=0.6)
         
         
-        print("time in result: ",result)
+        print("time in result: ",result) 
         # Get current date and time
         current_datetime = datetime.now()
 
@@ -89,6 +109,13 @@ def face_recognition():
             name=result[0],
             data=data,
             time=formatted_time)
+        
+        # temperature
+        Fbase().firebaseUpdate(
+            keyName=formatted_date,
+            name=result[0],
+            data="temp",
+            time=temp)
         
         app.config["BGR_timeIn"] = 0,0,255
             
@@ -139,6 +166,7 @@ def upload_file():
         # Check if faces are detected 
         if len(faces) == 0:
             app.config["BGR"] = 0,255,255
+            print('time out')
             return jsonify({
                 "name": ("No face is detected",""),
                 "RGB" : str(app.config["BGR"])
@@ -354,4 +382,5 @@ if __name__ == '__main__':
     app.run(
         host='0.0.0.0',
         debug=True,
+        threaded=True,
         port=1000)
