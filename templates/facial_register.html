@@ -6,7 +6,7 @@
 <title>Facial Registration</title>
 <style>
     body {
-        font-family: Arial, sans-serif;
+        font-family: 'Segoe UI', sans-serif;
         margin: 0;
         padding: 0;
         display: flex;
@@ -33,18 +33,19 @@
         outline: none;
         padding: 12px 20px;
         font-size: 16px;
-        border-radius: 15px;
+        border-radius: 20px; /* Rounded corners */
         background-color: #f4f4f4;
         color: black;
         transition: background-color 0.3s, color 0.3s;
         width: 300px;
         border: 2px solid #333;
-        border-radius: 15px;
     }
-    /* input[type="text"]:focus, */
+    input[type="text"]:focus {
+        background-color: #fff; /* Change background color on focus */
+    }
     button:hover {
-        background-color: #333;
-        color: #f4f4f4;
+        background-color: #007bff; /* Blue color on hover */
+        color: #fff;
     }
     #video-container {
         display: none;
@@ -66,7 +67,7 @@
         <h2>Please Register Your Name</h2>
 
         <input type="text" id="name" placeholder="Enter Your Name">
-        <p class="notification" id="notification-text">Please enter your name.</p>
+        <p class="notification" id="notification-text">Please Enter your name.</p>
         <button onclick="name_register()">Proceed to Facial Registration</button>
     </div>
 

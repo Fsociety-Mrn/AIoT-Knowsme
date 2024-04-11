@@ -67,6 +67,24 @@
         p {
             font-size: 20px;
         } 
+
+        /* Style for the button */
+        button {
+            padding: 10px 20px;
+            background-color: #007bff; /* Blue color */
+            color: #fff; /* White text color */
+            border: none;
+            border-radius: 20px; /* Make the button rounder */
+            cursor: pointer;
+            font-family: 'Segoe UI', sans-serif; /* Apply Segoe UI font */
+            font-size: 18px;
+            transition: background-color 0.3s ease; /* Smooth transition */
+        }
+
+        /* Change button background color on hover */
+        button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
     </style>
 </head>
 <body>
@@ -84,7 +102,9 @@
         <h1 id="time">11:00 am</h1>
         <h6 id="date">April 3 2024</h6>
         <p id="result">Engr. Jerico Biag</p>
+        <br>
         <a href="/facial_register">
+            <!-- Apply button styles -->
             <button>Register Faces</button>
         </a>
         
