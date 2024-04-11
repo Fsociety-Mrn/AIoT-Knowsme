@@ -55,7 +55,29 @@
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
- 
+        .table-container {
+            max-height: 200px; /* Set a maximum height */
+            overflow-y: auto; /* Enable vertical scrolling */
+        }
+        .container table {
+             max-height: 200px; /* Set a maximum height */
+             overflow-y: auto; /* Enable vertical scrolling */
+        }
+
+        /* Style for the table header */
+        .container table th {
+            position: sticky; /* Make the header sticky */
+            top: 0; /* Stick it to the top */
+            background-color: #f2f2f2;
+        }
+
+        /* Style for the table cells */
+        .container table td {
+           border: 1px solid #dddddd;
+           text-align: left;
+           padding: 8px;
+        }
+
         h1 {
             font-size: 30px;
         } 
@@ -107,7 +129,76 @@
             <!-- Apply button styles -->
             <button>Register Faces</button>
         </a>
-        
+        <br>
+        <div class="container">
+            <!-- Existing content -->
+            <div class="table-container">
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Temperature</th>
+                <th>Time In</th>
+                <th>Time Out</th>
+            </tr>
+            <tr>
+                <td>John Doe</td>
+                <td>36.5°C</td>
+                <td>11:00</td>
+                <td>06:00</td>
+            </tr>
+            <tr>
+                <td>John Doe</td>
+                <td>36.5°C</td>
+                <td>11:00</td>
+                <td>06:00</td>
+            </tr>
+            <tr>
+                <td>John Doe</td>
+                <td>36.5°C</td>
+                <td>11:00</td>
+                <td>06:00</td>
+            </tr>
+            <tr>
+                <td>John Doe</td>
+                <td>36.5°C</td>
+                <td>11:00</td>
+                <td>06:00</td>
+            </tr>
+            <tr>
+                <td>John Doe</td>
+                <td>36.5°C</td>
+                <td>11:00</td>
+                <td>06:00</td>
+            </tr>
+            <tr>
+                <td>John Doe</td>
+                <td>36.5°C</td>
+                <td>11:00</td>
+                <td>06:00</td>
+            </tr>
+            <tr>
+                <td>John Doe</td>
+                <td>36.5°C</td>
+                <td>11:00</td>
+                <td>06:00</td>
+            </tr>
+            <tr>
+                <td>John Doe</td>
+                <td>36.5°C</td>
+                <td>11:00</td>
+                <td>06:00</td>
+            </tr>
+            <tr>
+                <td>John Doe</td>
+                <td>36.5°C</td>
+                <td>11:00</td>
+                <td>06:00</td>
+            </tr>
+            
+            <!-- Add more rows as needed -->
+        </table>
+    </div>
+</div>
     </div>
 </div>
 
@@ -190,6 +281,7 @@
         document.getElementById('time').textContent = timeString;
         document.getElementById('date').textContent = dateString;
     }
+    
 
     // Call updateTimeAndDate function to initialize
     updateTimeAndDate();
@@ -201,6 +293,7 @@
     // run facial recognition every 500 milisecond
     setInterval(captureAndUpload, 1000);
 </script>
+
 
 </body>
 </html>
