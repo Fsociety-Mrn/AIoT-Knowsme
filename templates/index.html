@@ -27,26 +27,25 @@
             align-items: center;
             height: 100vh;
             padding: 10px;
-            grid-column: span 12; 
+            gap: 20px; /* Spacing between containers */
         }
         
         /* Style for each row container */
         .container {
             display: flex;
-            flex-direction: column; /* Align items horizontally */
-            justify-content:  flex-start;
+            flex-direction: column; /* Align items vertically */
+            justify-content: center;
             align-items: center;
-            margin-top: 20px;
-            grid-column: span 4;
-        }
-
-        .container:nth-child(1) {
-            grid-column: span 8; /* First container spans 8 columns */
+            padding: 20px;
+            background-color: #fff; /* White background */
+            border-radius: 10px; /* Rounded corners */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Shadow effect */
+            text-align: center;
         }
 
         /* Additional styling for the elements inside the container */
         .container > * {
-            margin: 0 10px;
+            margin: 10px 0;
         }
 
         video {
@@ -58,15 +57,34 @@
  
         h1 {
             font-size: 30px;
+            font-weight: bold; /* Make the heading bold */
         } 
 
         h6 {
             font-size: 24px;
+            font-weight: normal; /* Reset font weight */
         } 
 
         p {
             font-size: 20px;
+            font-weight: normal; /* Reset font weight */
         } 
+
+        /* Update button style */
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 20px; /* Rounded corners */
+            background-color: #007bff; /* Blue color */
+            color: #fff; /* White text */
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
     </style>
 </head>
 <body>
@@ -84,6 +102,7 @@
         <h1 id="time">11:00 am</h1>
         <h6 id="date">April 3 2024</h6>
         <p id="result">Engr. Jerico Biag</p>
+        <button>Sample Button</button> <!-- Example button -->
     </div>
 </div>
 
@@ -121,8 +140,6 @@
         var video = document.getElementById('video');
         var canvas = document.createElement('canvas');
         var context = canvas.getContext('2d');
-    
-        // document.getElementById('result').textContent  = "...";
     
         // Set canvas dimensions to match the image dimensions
         canvas.width = video.width;

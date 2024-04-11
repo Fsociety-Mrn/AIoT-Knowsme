@@ -105,11 +105,12 @@ def Facial_Detection(camera=None, face_detector=None):
             cv2.putText(frame,Name + " " + str(percent),(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
             cv2.putText(frame,"Temperature: " + str(targetTemp),(30,70),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
             
-    
-            
-        _, frame_encoded  = cv2.imencode('.png', frame)
-        yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + frame_encoded.tobytes() + b'\r\n')
+            TEMP_THRESHOLD = 37.5
+            if float(targetTemp) > TEMP_THRESHOLD:
+                # Send notification
+                cv2.putText(frame, "High Temperature!", (30, 100), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 2)
+        _, frame_encoded = cv2.imencode('.png', frame)
+        yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + frame_encoded.tobytes() + b'\r\n')
 
 
 # homepage =========================================== #
