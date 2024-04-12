@@ -107,6 +107,27 @@
         button:hover {
             background-color: #0056b3; /* Darker blue on hover */
         }
+
+        /* Style for the refresh button */
+.button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s;
+}
+
+/* Hover effect */
+.button:hover {
+    background-color: #45a049;
+}
+
     </style>
 </head>
 <body>
@@ -131,11 +152,7 @@
         </a>
         <br>
 
-        <a>
-            <!-- Apply button styles -->
-            <button>Refresh Table</button>
-        </a>
-
+    
         <div class="container">
             <!-- Existing content -->
             <div class="table-container">
@@ -210,8 +227,16 @@
         </tbody>
             <!-- Add more rows as needed -->
         </table>
+
+ 
+
     </div>
-</div>
+
+        </div>
+        <a>
+            <br>
+            <button>Refresh Table</button>
+        </a>
     </div>
 </div>
 
