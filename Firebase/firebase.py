@@ -1,5 +1,7 @@
 import pyrebase
 
+from datetime import datetime
+
 class Firebase:
     def __init__(self):
    
@@ -22,5 +24,22 @@ class Firebase:
         
         self.db.child("History").child(keyName).child(name).push({ data:time })
         
+    # read the data
+    def firebaseRead_Today(self):
+        
+        try:
+            
+            # Get the current date
+            current_date = datetime.now()
+
+            # Format the date as "Month day year" e.g. "April 12 2024"
+            formatted_date = current_date.strftime("%B %d %Y")
+
+            return self.db.child("History").child(formatted_date).get().val()
+
+        except Exception as e:
+            pass
+            print(f"firebaseRead: keyname is not existed")
+            return False
         
     

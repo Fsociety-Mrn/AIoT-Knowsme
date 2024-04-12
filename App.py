@@ -378,6 +378,12 @@ def facial_register():
 def face_training_():
     return render_template('face_training.html')
 
+# History =========================================== #
+@app.route('/Today_History')
+def Today_History():
+    data = Fbase().firebaseRead_Today()
+    return jsonify(data)
+
 if __name__ == '__main__':
     app.run(
         host='0.0.0.0',

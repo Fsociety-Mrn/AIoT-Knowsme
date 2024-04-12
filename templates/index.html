@@ -130,28 +130,29 @@
             <button>Register Faces</button>
         </a>
         <br>
+
+        <a>
+            <!-- Apply button styles -->
+            <button>Refresh Table</button>
+        </a>
+
         <div class="container">
             <!-- Existing content -->
             <div class="table-container">
-        <table>
-            <tr>
-                <th>Name</th>
-                <th>Temperature</th>
-                <th>Time In</th>
-                <th>Time Out</th>
-            </tr>
-            <tr>
-                <td>John Doe</td>
-                <td>36.5°C</td>
-                <td>11:00</td>
-                <td>06:00</td>
-            </tr>
-            <tr>
-                <td>John Doe</td>
-                <td>36.5°C</td>
-                <td>11:00</td>
-                <td>06:00</td>
-            </tr>
+        <table id="Row">
+
+            <!-- Table Header -->
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Temperature</th>
+                    <th>Time In</th>
+                    <th>Time Out</th>
+                </tr>
+            </thead>
+
+            <!-- Table Row -->
+            <tbody id="tableBody">
             <tr>
                 <td>John Doe</td>
                 <td>36.5°C</td>
@@ -194,7 +195,19 @@
                 <td>11:00</td>
                 <td>06:00</td>
             </tr>
-            
+            <tr>
+                <td>John Doe</td>
+                <td>36.5°C</td>
+                <td>11:00</td>
+                <td>06:00</td>
+            </tr>
+            <tr>
+                <td>John Doe</td>
+                <td>36.5°C</td>
+                <td>11:00</td>
+                <td>06:00</td>
+            </tr>
+        </tbody>
             <!-- Add more rows as needed -->
         </table>
     </div>
@@ -244,9 +257,14 @@
                     }
                 })
                 .then(data => {
-                    // Handle facial recognition result here
-                    console.log(data);
                     document.getElementById('result').textContent  = data.name[0];
+
+                  
+                    if (data.name[0] !== 'No match detected' && data.name[0] !== 'No face is detected') {
+                        updateRow();
+                    }
+                    
+                      
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -282,10 +300,49 @@
         document.getElementById('date').textContent = dateString;
     }
     
+    // Function to get data Today
+    async function updateRow(){
+        try {
 
-    // Call updateTimeAndDate function to initialize
+            const tableBody = document.getElementById('Row').querySelector('tbody');
+            tableBody.innerHTML = ''
+
+            // Send GET request to backend API       
+            const response = await fetch('/Today_History');
+            if (!response.ok) {
+                throw new Error('Failed to fetch data');
+            }
+        
+            // Parse response data
+            const data = await response.json();
+        
+            // Filter out "No match detected"
+            const filteredData = Object.fromEntries(
+                Object.entries(data).filter(([key, value]) => key !== "No match detected")
+            );
+
+            Object.entries(filteredData).map((data,key) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${data[0]}</td>
+                    <td>${data[1]['temp'] ? data[1]['temp'] : "N/A"}</td>
+                    <td>${data[1]['Time In'] ? data[1]['Time In'] : "N/A"}</td>
+                    <td>${data[1]['Time Out'] ? data[1]['Time Out'] : "N/A"}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    
+
+    // initialize function
     updateTimeAndDate();
     captureAndUpload();
+    updateRow();
 
     // Update time and date every second
     setInterval(updateTimeAndDate(), 1000);
