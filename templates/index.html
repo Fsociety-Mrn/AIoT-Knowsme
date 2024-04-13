@@ -104,6 +104,7 @@
         <p id="result">Server is Loading</p>
         <p>temperature: </p>
         <p id="temperature">40</p>
+        <p id="alert"></p>
         <button>Sample Button</button> <!-- Example button -->
     </div>
 </div>
@@ -111,6 +112,8 @@
 <script>
     
     var temperatures = "";
+
+    // Get Temperature Function
     async function get_temperature(){
         await fetch('/Temperature', {
                     method: 'GET',
@@ -131,31 +134,22 @@
                     console.error('Error:', error);
                 });
     }
-    
-    // Update status
-    async function update_status(data) {
-    
-    // Send POST request to backend API
-             
-             await fetch('/update_status', {
-                    method: 'POST',
+
+    // Status for facial training
+    async function get_status(){
+        await fetch('/status', {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    } else {
-                        throw new Error('Failed to upload file');
                     }
                 })
-                .then(data => {
-                    // Handle facial recognition result here
-                    console.log(data);
+                .then(async response => {
+                    data = await response.json()
                     
-                    
+                    console.log(data)
+                    if (data === "process"){
+                        location.href = "/facial_capture"
+                    }
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -196,10 +190,16 @@
                 formData.append('data', 'Time In');
                 formData.append('temp',String(temperatures));
                 
-                console.log(String(temperatures))
+                document.getElementById('alert').textContent  = "";
+                if (temperatures > 37){
+                    console.log("temperature is high")
+                    document.getElementById('alert').textContent  = "temperature is high";
+                    return
+                }
+              
     
                 // Send POST request to backend API
-                await fetch('http://192.168.100.38:1000/face_recognition', {
+                await fetch('/face_recognition', {
                     method: 'POST',
                     body: formData
                 })
@@ -212,9 +212,6 @@
                 })
                 .then(async data => {
                     // Handle facial recognition result here
-                    //console.log(data);
-                    
-                    await update_status(data)
                     document.getElementById('result').textContent  = data.name[0];
                 })
                 .catch(error => {
@@ -225,8 +222,6 @@
             }
         }, 'image/jpeg'); // Specify image format (e.g., JPEG)
     }
-
-    
 
     // Function to update time and date
     function updateTimeAndDate() {
@@ -251,28 +246,27 @@
         // Set time and date in HTML
         document.getElementById('time').textContent = timeString;
         document.getElementById('date').textContent = dateString;
-        get_temperature();
+        // get_temperature();
     }
 
     // Call updateTimeAndDate function to initialize
     updateTimeAndDate();
     
-     // update temperature
-     get_temperature();
+    // update temperature
+    get_temperature();
         
-
     // Update time and date every second
     setInterval(updateTimeAndDate(), 1000);
     
     // Update time and date every second
-    // setInterval(get_temperature, 1000);
+    setInterval(get_temperature, 1000);
 
-    // run facial recognition every 500 milisecond
-
+    // run facial recognition every second
     setInterval(async function(){
         await captureAndUpload();
+        await get_status();
     }, 1000);
-    
+
    
 </script>
 </body>

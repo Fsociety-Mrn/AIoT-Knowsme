@@ -20,7 +20,7 @@ class JoloRecognition:
         self.facenet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
         
         # load known faces data
-        self.Saved_Data = torch.load('Jolo_Recognition/Model/data.pt', map_location='cpu')
+        self.Saved_Data = torch.load('/home/raspberrypi/Desktop/AIoT-Knowsme/Jolo_Recognition/Model/data.pt', map_location='cpu')
         self.Embeding_List = self.Saved_Data[0]
         self.Name_List = self.Saved_Data[1]
     
@@ -90,20 +90,20 @@ class JoloRecognition:
                             return (self.Name_List[idx_min], str('{:.2f}%'.format(percent)))
                         else:
                         
-                            return ('No match detected', None)
+                            return ('No match detected', "")
                 
                     else:
-                        return ('No match detected', None)
+                        return ('No match detected', "")
                 
                 else:
-                    ('No match detected', None)
+                    ('No match detected', "")
                 
         except:
-            print("error")
-            ('No match detected', None)
+    
+            ('No match detected', "")
                 
     # training from dataset
-    def Face_Train(self, Dataset_Folder="Jolo_Recognition/Registered-Faces", location="Jolo_Recognition/Model"):
+    def Face_Train(self, Dataset_Folder="/home/raspberrypi/Desktop/AIoT-Knowsme/Jolo_Recognition/Registered-Faces", location="/home/raspberrypi/Desktop/AIoT-Knowsme/Jolo_Recognition/Model"):
         cplusplus = 0
         
         self.Result = "Training...."
@@ -120,9 +120,9 @@ class JoloRecognition:
 
         # load the dataset
             loader = DataLoader(
-                dataset,
+                dataset,                
+                batch_size=20, 
                 collate_fn=collate_fn, 
-                # batch_size=20,
                 pin_memory=True)
 
         # create empty lists for storing embeddings and names
@@ -150,11 +150,11 @@ class JoloRecognition:
 
         # save the calculated face distance into data.pt
             torch.save(data, location + '/data.pt')
-            return "Successfully trained"
+            return "Successfully trained",True
 
         except Exception as e:
             print(f"Error occurred while training the model: {str(e)}")
-            return "Error occurred while training the model"
+            return "Error occurred while training the model",False
         
         
 # uncomment this code kapag magnual training ka, 
