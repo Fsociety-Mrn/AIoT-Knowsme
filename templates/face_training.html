@@ -63,6 +63,10 @@
     <div class="loading-text">
         <p>Please do not interrupt...</p>
     </div>
+
+    <div class="loading-text" id="completion-text" style="display: none;">
+        <p>Facial Register Completer</p>
+    </div>
 </div>
 
 <script>
@@ -82,8 +86,17 @@
             const data = await response.json();
 
             if (data[1]){
-                alert(data[0])
-                location.href = "/"
+         // Stop loading animation
+         document.querySelector('.loading-dots').style.display = 'none';
+         document.querySelector('.loading-text').style.display = 'none';
+         document.querySelector('.loading-text').style.display = 'none';
+
+         // Display completion text
+         document.getElementById('completion-text').style.display = 'block';
+         // Wait for 5 seconds before redirecting
+         setTimeout(function(){
+             location.href = "/";
+         }, 5000); // 5000 milliseconds = 5 seconds
             }
         })
         .catch(error => {
