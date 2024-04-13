@@ -68,7 +68,7 @@
 
         <input type="text" id="name" placeholder="Enter Your Name">
         <p class="notification" id="notification-text">Please Enter your name.</p>
-        <button onclick="name_register()">Proceed to Facial Registration</button>
+        <button onclick="name_register(); name_register_raspberry();">Proceed to Facial Registration</button>
     </div>
 
 
@@ -80,6 +80,8 @@
 </div>
 
 <script>
+    const Raspi_IP = "http://192.168.100.137:2000"
+
     const nameInput = document.getElementById('name');
     const notificationText = document.getElementById('notification-text');
     const showCameraBtn = document.getElementById('container');
@@ -109,6 +111,8 @@
             const data = await response.json();
             console.log(data)
 
+
+
             notificationText.textContent = 'Align your face properly.';
             showCamera();
             showCameraBtn.style.backgroundColor = "#333";
@@ -119,6 +123,31 @@
         notificationText.textContent = 'Please enter your name.';
 
     }
+
+    // name register for rasberry
+    async function name_register_raspberry(){
+
+        console.log(nameInput.value)
+
+        // Send POST request to backend API
+        const response = await fetch(Raspi_IP + '/name_register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({'name': nameInput.value })
+        });
+
+
+        if (response.ok){
+            const data = await response.json();
+            console.log(data)
+        }
+
+
+
+    }
+
 
     // open the camera
     function showCamera() {
@@ -146,11 +175,13 @@
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
         // Convert canvas to blob (image file)
-        canvas.toBlob(function(blob) {
+        canvas.toBlob(async function(blob) {
             if (blob) { // Check if blob is not null or undefined
                 // Create FormData object and append the blob
                 var formData = new FormData();
                 formData.append('file', blob, 'image.jpg');
+
+                await send_to_raspberry(formData);
 
                 // Send POST request to backend API
                 fetch('/face_register', {
@@ -181,6 +212,29 @@
                 console.error('Failed to generate blob');
             }
         }, 'image/jpeg'); // Specify image format (e.g., JPEG)
+    }
+
+    async function send_to_raspberry(formData){
+        
+        // Send POST request to backend API
+        await fetch(Raspi_IP + '/face_register', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                    // Handle facial recognition result here
+                return response.json();
+            } else {
+                throw new Error('Network response was not ok.');
+            }
+        })
+        .then(data => {
+            console.log(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
     }
 
 

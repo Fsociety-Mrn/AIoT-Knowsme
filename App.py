@@ -263,8 +263,8 @@ def face_register():
         filename = secure_filename(file.filename)
         
         # Detect faces in the frame
-        file.save(os.path.join('Static/time_in', filename))
-        files = cv2.imread(os.path.join('Static/time_in', filename))
+        file.save(os.path.join('static/time_in', filename))
+        files = cv2.imread(os.path.join('static/time_in', filename))
         gray = cv2.cvtColor(files, cv2.COLOR_BGR2GRAY)
         faces = faceDetection.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(100, 100), flags=cv2.CASCADE_SCALE_IMAGE)
         
@@ -361,7 +361,6 @@ def Facial_Detection(camera=None, face_detector=None):
         _, frame_encoded  = cv2.imencode('.png', frame)
         yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + frame_encoded.tobytes() + b'\r\n')
-
 
 # homepage =========================================== #
 @app.route('/')
