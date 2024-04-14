@@ -5,7 +5,7 @@ from Jolo_Recognition.Face_Recognition import JoloRecognition as JL
 from datetime import datetime
 from Firebase.firebase import Firebase as Fbase
 
-import cv2
+import cv2 
 import os
 import time
 import shutil
@@ -220,14 +220,18 @@ def upload_file():
 def name_register():
     
     # Get the first and last name from the request body
-    name = request.json
+    ID = request.json
 
     # Check that both first and last name are provided
-    if not name['name']:
+    if not ID['name']:
         return jsonify({"message": 'enter your fullname'}), 400
+    
+    result, name = Fbase().firebaseCheck_ID(ID['name'])
+    if not result:
+        return jsonify({"message": 'Invalid Employee ID'}), 400
 
     # Define the name of the folder you want to create
-    folder_name = f"{str(name['name']).capitalize()}"
+    folder_name = f"{str(name).capitalize()}"
 
     # Define the path to the folder you want to create
     path = f"Jolo_Recognition/Registered-Faces/{folder_name}"

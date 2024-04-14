@@ -42,4 +42,14 @@ class Firebase:
             print(f"firebaseRead: keyname is not existed")
             return False
         
-    
+    def firebaseCheck_ID(self,ID):
+        data = self.db.child("Account").get().val()
+        for __, each in data.items():
+            
+            if each['idNumber'] == ID:
+                return True,each['name']
+            
+        return False,""
+            
+
+
