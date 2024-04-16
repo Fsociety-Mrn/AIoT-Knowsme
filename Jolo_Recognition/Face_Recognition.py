@@ -96,11 +96,10 @@ class JoloRecognition:
                         return ('No match detected', "")
                 
                 else:
-                    ('No match detected', "")
+                    return('No match detected', "")
                 
         except:
-    
-            ('No match detected', "")
+            return('No match detected', "")
                 
     # training from dataset
     def Face_Train(self, Dataset_Folder="/home/raspberrypi/Desktop/AIoT-Knowsme/Jolo_Recognition/Registered-Faces", location="/home/raspberrypi/Desktop/AIoT-Knowsme/Jolo_Recognition/Model"):
