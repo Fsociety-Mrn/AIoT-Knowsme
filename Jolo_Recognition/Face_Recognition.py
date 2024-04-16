@@ -96,11 +96,11 @@ class JoloRecognition:
                         return ('No match detected', None)
                 
                 else:
-                    ('No match detected', None)
+                    return ('No match detected', None)
                 
         except:
             print("error")
-            ('No match detected', None)
+            return('No match detected', None)
                 
     # training from dataset
     def Face_Train(self, Dataset_Folder="Jolo_Recognition/Registered-Faces", location="Jolo_Recognition/Model"):
