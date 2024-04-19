@@ -68,7 +68,7 @@
 
         <input type="text" id="name" placeholder="Enter Your Name">
         <p class="notification" id="notification-text">Please Enter your employee.</p>
-        <button onclick="name_register(); name_register_raspberry();">Proceed to Facial Registration</button>
+        <button onclick="name_register_raspberry();">Proceed to Facial Registration</button>
     </div>
 
 
@@ -141,6 +141,7 @@
 
         if (response.ok){
             const data = await response.json();
+            name_register();
             console.log(data)
         }
 

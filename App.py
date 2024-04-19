@@ -215,6 +215,26 @@ def upload_file():
                 "RGB" : str(app.config["BGR"])
             }),401
 
+def remove_folder():
+    location = "Jolo_Recognition/Registered-Faces"
+    data = Fbase().firebaseRead("Account")
+    
+    # Get a list of all folder names from data
+    names_to_keep = [each['name'] for _, each in data.items()]
+    
+    # List all folders in the directory
+    all_folders = os.listdir(location)  # Replace "Your_Folder_Path_Here" with the actual path
+    
+    for folder_name in all_folders:
+        if folder_name not in names_to_keep:
+            folder_path = os.path.join(location, folder_name)  # Replace "Your_Folder_Path_Here" with the actual path
+            if os.path.isdir(folder_path):
+                shutil.rmtree(folder_path)
+                print(f"Folder '{folder_name}' removed.")
+            else:
+                print(f"Path '{folder_path}' is not a directory.")
+        else:
+            print(f"Folder '{folder_name}' exists in data, skipping removal.")
 # name register 
 @app.route('/name_register', methods=['POST']) 
 def name_register():
@@ -230,6 +250,8 @@ def name_register():
     if not result:
         return jsonify({"message": 'Invalid Employee ID'}), 400
 
+    remove_folder()
+    
     # Define the name of the folder you want to create
     folder_name = f"{str(name).capitalize()}"
 

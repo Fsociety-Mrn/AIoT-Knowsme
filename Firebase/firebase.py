@@ -40,16 +40,20 @@ class Firebase:
         except Exception as e:
             pass
             print(f"firebaseRead: keyname is not existed")
-            return False
-        
+            return False            
+            
     def firebaseCheck_ID(self,ID):
-        data = self.db.child("Account").get().val()
+        data = self.firebaseRead("Account")
         for __, each in data.items():
             
             if each['idNumber'] == ID:
                 return True,each['name']
             
         return False,""
-            
+    
+    def firebaseRead(self,ID):
+        data = self.db.child(ID).get().val()
+        return data
+    
 
 
