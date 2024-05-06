@@ -20,7 +20,7 @@ class JoloRecognition:
         self.facenet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
         
         # load known faces data
-        self.Saved_Data = torch.load('/home/raspberrypi/Desktop/AIoT-Knowsme/Jolo_Recognition/Model/data.pt', map_location='cpu')
+        self.Saved_Data = torch.load('Jolo_Recognition/Model/data.pt', map_location='cpu')
         self.Embeding_List = self.Saved_Data[0]
         self.Name_List = self.Saved_Data[1]
     
@@ -102,7 +102,7 @@ class JoloRecognition:
             return('No match detected', "")
                 
     # training from dataset
-    def Face_Train(self, Dataset_Folder="/home/raspberrypi/Desktop/AIoT-Knowsme/Jolo_Recognition/Registered-Faces", location="/home/raspberrypi/Desktop/AIoT-Knowsme/Jolo_Recognition/Model"):
+    def Face_Train(self, Dataset_Folder="Jolo_Recognition/Registered-Faces", location="Jolo_Recognition/Model"):
         cplusplus = 0
         
         self.Result = "Training...."
@@ -119,8 +119,8 @@ class JoloRecognition:
 
         # load the dataset
             loader = DataLoader(
-                dataset,                
-                batch_size=20, 
+                dataset,
+                batch_size=20,
                 collate_fn=collate_fn, 
                 pin_memory=True)
 
