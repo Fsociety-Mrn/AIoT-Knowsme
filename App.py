@@ -193,6 +193,53 @@ def video_feed():
 
     return Response(Facial_Detection(camera=camera, face_detector=face_detection), 
                         mimetype='multipart/x-mixed-replace; boundary=frame')
+
+# Facial Recognition function
+def facialRecognition(frame):
+    # facial reconition
+    result = JL().Face_Compare(face=frame,threshold=0.7)
+
+    app.config["FACE_RESULT"] = result
+    app.config["BGR"] = (0,0,255) if result[0] == "No match detected" else (0,255,0 )
+    app.config["CAMERA_STATUS"] = ("Access Denied",True) if result[0] == "No match detected" else ("Access Granted",False) 
+ 
+    # Get current date and time
+    current_datetime = datetime.now()
+
+    # Format date as "Month Day Year" (e.g., "April 03 2024")
+    formatted_date = current_datetime.strftime("%B %d %Y")
+
+    # Format time as "Hour:Minute AM/PM" (e.g., "1:52 PM")
+    formatted_time = current_datetime.strftime("%I:%M %p")
+                
+    # Fbase().firebaseUpdate(
+    #                      keyName=formatted_date,
+    #                      name=result[0],
+    #                      data="Time In",
+    #                      time=formatted_time)
+        
+    # # temperature
+    # Fbase().firebaseUpdate(
+    #                      keyName=formatted_date,
+    #                      name=result[0],
+    #                      data="temp",
+    #                      time=str(app.config["target_temp"]))
+
+
+# check face blurred level
+def detect_blur_in_face(face_gray,person=None,Blurred=1000):
+        
+    # Calculate the Laplacian
+    laplacian = cv2.Laplacian(face_gray, cv2.CV_64F)
+    
+    # Calculate the variance of the Laplacian
+    variance = laplacian.var()
+        
+    Face_blured = float("{:.2f}".format(variance))
+    
+    print(person,Face_blured)
+    
+    return True if Face_blured > Blurred else False
     
 def Facial_Detection(camera=None, face_detector=None):
     
@@ -213,79 +260,79 @@ def Facial_Detection(camera=None, face_detector=None):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
         # Detect faces in the frame
-        faces = face_detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(100, 100), flags=cv2.CASCADE_SCALE_IMAGE)
+        faces = face_detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(150, 150), flags=cv2.CASCADE_SCALE_IMAGE)
 
       
         if len(faces) == 1:
             
-            if float(app.config["target_temp"]) > 38:
-                cv2.rectangle(frame, (x, y), (x+w, y+h), (0,0,255), 2)
-                app.config["CAMERA_STATUS"] = "temperature is high",True
-                app.config["FACE_RESULT"] = "",""
-                break
             
             (x, y, w, h) = faces[0]
+            
+            faceCrop = frame[y:y+h, x:x+w]
+            face_gray = cv2.cvtColor(faceCrop, cv2.COLOR_BGR2GRAY)
+            
+            blureness = detect_blur_in_face(face_gray)
+            
+            
             
             # Increment the timer by the elapsed time since the last send
             timer += time.time() - start_time
             start_time = time.time()
 
-            
             # Check if 3 seconds have elapsed since the last send
-            if timer >= 3:
+            if timer >= 1:
                 app.config["BGR"] = 0,255,255
                 
-                # facial reconition
-                result = JL().Face_Compare(face=frame,threshold=0.7)
                 
-                print(result)
-                
-        
-                app.config["FACE_RESULT"] = result
-                app.config["BGR"] = (0,0,255) if result[0] == "No match detected" else (0,255,0 )
-                app.config["CAMERA_STATUS"] = ("Access Denied",True) if result[0] == "No match detected" else ("Access Granted",False) 
- 
-                # Get current date and time
-                current_datetime = datetime.now()
-
-                # Format date as "Month Day Year" (e.g., "April 03 2024")
-                formatted_date = current_datetime.strftime("%B %d %Y")
-
-                # Format time as "Hour:Minute AM/PM" (e.g., "1:52 PM")
-                formatted_time = current_datetime.strftime("%I:%M %p")
-                
-                Fbase().firebaseUpdate(
-                         keyName=formatted_date,
-                         name=result[0],
-                         data="Time In",
-                         time=formatted_time)
-        
-                # temperature
-                Fbase().firebaseUpdate(
-                         keyName=formatted_date,
-                         name=result[0],
-                         data="temp",
-                         time=str(app.config["target_temp"]))
-                
+                if blureness:
+                    facialRecognition(frame=frame)
+                    
                 # Reset the timer and the start time
                 timer = 0
                 start_time = time.time()
             
+            
+            app.config["CAMERA_STATUS"] = "Person detected",True
 
             B,G,R = app.config["BGR"]          
             Name,percent = app.config["FACE_RESULT"]
             
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
-            cv2.putText(frame,Name + " " + str(percent),(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
+            if blureness:
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
+                cv2.putText(frame,Name + " " + str(percent),(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
             
    
         elif len(faces) > 1:
             
-            for (x, y, w, h) in faces:
-                cv2.rectangle(frame, (x, y), (x+w, y+h), (0,0,255), 2)
-                app.config["BGR"] = 0,0,255
-                app.config["CAMERA_STATUS"] = "1 person at the time",True
-                app.config["FACE_RESULT"] = "",""
+            for i,(x, y, w, h) in enumerate(faces,0):
+                
+                app.config["CAMERA_STATUS"] = "Multiple person is detected",True
+                
+                face_crop = frame[y:y+h, x:x+w]
+                face_gray = cv2.cvtColor(faceCrop, cv2.COLOR_BGR2GRAY)
+            
+                # Calculate new width and height
+                scale_factor = 1.2
+                new_w = int(w * scale_factor)
+                new_h = int(h * scale_factor)
+
+                # Adjust x and y to keep the center of the face in the crop
+                new_x = max(0, x - (new_w - w) // 2)
+                new_y = max(0, y - (new_h - h) // 2)
+
+                # Crop the image with the new dimensions
+                faceCrop = frame[new_y-40:new_y+new_h+30, new_x-40:new_x+new_w+30]
+                
+                blureness = detect_blur_in_face(face_gray,f"person_{i}",1500)
+                
+                if blureness:
+                    facialRecognition(frame=face_crop)
+                
+                    B,G,R = app.config["BGR"]          
+                    Name,percent = app.config["FACE_RESULT"]
+            
+                    cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
+                    cv2.putText(frame,f"person_{i}: " + Name + " " + str(percent),(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
                     
         else:
             app.config["BGR"] = 0,255,255

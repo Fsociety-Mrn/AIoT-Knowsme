@@ -14,7 +14,7 @@ class JoloRecognition:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
         # face detection
-        self.mtcnn  = MTCNN(image_size=160, margin=0, min_face_size=40,select_largest=False, device=self.device)
+        self.mtcnn  = MTCNN(image_size=160, margin=0, min_face_size=40,select_largest=True, device=self.device)
         
         # facial recognition
         self.facenet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
@@ -37,7 +37,7 @@ class JoloRecognition:
     
  
     # for face recognition
-    def Face_Compare(self, face, threshold=0.6):
+    def Face_Compare(self, face, person="none", threshold=0.6):
         
         try:
 
@@ -47,7 +47,7 @@ class JoloRecognition:
                 face,prob = self.mtcnn(face, return_prob=True)
             
                 # check if there is face and probability of 90%
-                if face  is not None and prob > 0.90:
+                if face  is not None and prob > 0.95:
                 
                 # calculcate the face distance
                     emb  = self.facenet(face.unsqueeze(0)).detach()
@@ -82,24 +82,28 @@ class JoloRecognition:
                         # print(self.Name_List[idx_min], min_dist)
                     
                         percent = self.__face_distance_to_conf(face_distance=min_dist,face_match_threshold=threshold) * 100
-                    
+
+                        print(f"Threshold: {min_dist < threshold} {person} {min_dist} " )
                         if min_dist < threshold:
                         
                             idx_min = match_list.index(min_dist)
 
                             return (self.Name_List[idx_min], str('{:.2f}%'.format(percent)))
                         else:
-                        
-                            return ('No match detected', "")
+            
+                            return ('No match detected', None)
                 
                     else:
-                        return ('No match detected', "")
+                        print("No match List")
+                        return ('No match detected', None)
                 
                 else:
-                    return('No match detected', "")
+                    print("faces are below 90%")
+                    return ('No match detected', None)
                 
-        except:
-            return('No match detected', "")
+        except Exception as e:
+            print("error: ",e)
+            return('No match detected', None)
                 
     # training from dataset
     def Face_Train(self, Dataset_Folder="Jolo_Recognition/Registered-Faces", location="Jolo_Recognition/Model"):
@@ -120,7 +124,6 @@ class JoloRecognition:
         # load the dataset
             loader = DataLoader(
                 dataset,
-                batch_size=20,
                 collate_fn=collate_fn, 
                 pin_memory=True)
 
