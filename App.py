@@ -18,6 +18,9 @@ app.config["BGR"] = 0,255,255
 
 app.config["BGR_timeIn"] = 0,255,255
 
+# Initialize timer variables
+start_time = time.time()
+
 # face detection
 faceDetection = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
@@ -42,102 +45,8 @@ ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'}
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-        
-# face recognition api | Time in
-@app.route('/face_recognition', methods=['POST'])
-def face_recognition():
+
     
-    file = request.files['file']
-    data = request.form.get('data')
-    temp = request.form.get('temp')
-    
-    print("Temperature: ", temp)
-    
-    temp = temp.replace(" ","")
-  
-    # check file if exist
-    if file and allowed_file(file.filename):
-        
-        # check if file name is not malicious
-        filename = secure_filename(file.filename)
-        
-        # save the file
-        file.save(os.path.join('Static/time_in', filename))
-
-        # read sending file via cv2
-        file = cv2.imread(os.path.join('Static/time_in', filename))
-
-        gray = cv2.cvtColor(file, cv2.COLOR_BGR2GRAY)
-        
-        # Detect faces in the frame
-        faces = faceDetection.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(100, 100), flags=cv2.CASCADE_SCALE_IMAGE)
-
-        # Check if faces are detected 
-        if len(faces) == 0:
-            app.config["BGR_timeIn"] = 0,255,255
-            print('time in')
-            return jsonify({
-                "name": ("No face is detected",""),
-                "RGB" : str(app.config["BGR_timeIn"])
-            }), 200
-            
-        if float(temp) > 37:
-            app.config["BGR_timeIn"] = 0,0,255
-            print('time in')
-            return jsonify({
-                "name": ("Please wait, your temperature is high",""),
-                "RGB" : str(app.config["BGR_timeIn"])
-            }), 200
-            
-        
-        # facial reconition
-        result = JL().Face_Compare(face=file,threshold=0.6)
-        
-        
-        print("time in result: ",result) 
-        # Get current date and time
-        current_datetime = datetime.now()
-
-        # Format date as "Month Day Year" (e.g., "April 03 2024")
-        formatted_date = current_datetime.strftime("%B %d %Y")
-
-        # Format time as "Hour:Minute AM/PM" (e.g., "1:52 PM")
-        formatted_time = current_datetime.strftime("%I:%M %p")
-        
-        Fbase().firebaseUpdate(
-            keyName=formatted_date,
-            name=result[0],
-            data=data,
-            time=formatted_time)
-        
-        # temperature
-        Fbase().firebaseUpdate(
-            keyName=formatted_date,
-            name=result[0],
-            data="temp",
-            time=temp)
-        
-        app.config["BGR_timeIn"] = 0,0,255
-            
-        if not result[0] == 'No match detected':
-            app.config["FACE_RESULT"] = result
-            app.config["BGR_timeIn"] = 0,255,0
-        
-        
-    
-        # return the result
-        return jsonify({
-                "name": result        ,
-                "RGB" : str(app.config["BGR_timeIn"])
-            }),200
-    else:
-        
-        # invalid file
-        return jsonify({
-                "name": result,
-                "RGB" : str(app.config["BGR"])
-            }),401
-        
 # face recognition api | Time out
 @app.route('/face-recognition', methods=['POST'])
 def upload_file():
@@ -329,15 +238,35 @@ def video_feed():
 
     return Response(Facial_Detection(camera=camera, face_detector=face_detection), 
                         mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+def faceCrop(frame,face):
+    
+    # Calculate new width and height
+    x, y, w, h = face
+    scale_factor = 1.2
+    new_w = int(w * scale_factor)
+    new_h = int(h * scale_factor)
+
+    # Adjust x and y to keep the center of the face in the crop
+    new_x = max(0, x - (new_w - w) // 2)
+    new_y = max(0, y - (new_h - h) // 2)
+
+    # Crop the image with the new dimensions
+    faceCrop = frame[new_y - 40:new_y + new_h + 30, new_x - 40:new_x + new_w + 30]
+            
+    return faceCrop
     
 def Facial_Detection(camera=None, face_detector=None):
     
-    # Initialize the timer and the start time
-    timer = 0
+    B, G, R = (0, 255, 255)
+    Name, percent = "", ""
+    
+    # Variable to keep track of time
     start_time = time.time()
     
     while True:
-        
+
         # Capture a frame from the camera
         ret, frame = camera.read()
         
@@ -345,48 +274,32 @@ def Facial_Detection(camera=None, face_detector=None):
             app.config["CAMERA_STATUS"] = "camera is not detected"
             break
         
-    
-
-        frame = cv2.flip(frame,1)
+        frame = cv2.flip(frame, 1)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
         # Detect faces in the frame
-        faces = face_detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(100, 100), flags=cv2.CASCADE_SCALE_IMAGE)
-
-
+        faces = face_detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(50, 50), flags=cv2.CASCADE_SCALE_IMAGE)
+        
         app.config["CAMERA_STATUS"] = "No Face is detected"
     
-        for (x, y, w, h) in faces:
+        
+        # Iterate over each detected face
+        for i, (x, y, w, h) in enumerate(faces, 0):
             
-            app.config["CAMERA_STATUS"] = "FACIAL RECOGNITION"
-
-            
-            # Increment the timer by the elapsed time since the last send
-            timer += time.time() - start_time
-            start_time = time.time()
-            
-            # Check if 2 seconds have elapsed since the last send
-            if timer >= 3:
-                app.config["BGR"] = 0,255,255
-                app.config["FACE_RESULT"] = "",""
-                
-                # Reset the timer and the start time
-                timer = 0
-                start_time = time.time()
-           
-            
-            B,G,R = app.config["BGR"]          
-            Name,percent = app.config["FACE_RESULT"]
-                          
-            # Get the coordinates of the face,draw rectangele and put text
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
-            cv2.putText(frame,Name + " " + str(percent),(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
-            
-
-            
-        _, frame_encoded  = cv2.imencode('.png', frame)
+            # Get the coordinates of the face, draw rectangle and put text
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (B, G, R), 2)
+            cv2.putText(frame, f'person_{i}: {percent}', (x - 60, y + h + 30), cv2.FONT_HERSHEY_COMPLEX, 1, (B, G, R), 1)
+        
+        # Encoding and yielding the frame
+        _, frame_encoded = cv2.imencode('.png', frame)
         yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + frame_encoded.tobytes() + b'\r\n')
+        
+        # break
+
+
+
+
 
 # homepage =========================================== #
 @app.route('/')
