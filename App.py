@@ -12,7 +12,8 @@ import shutil
 
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": ["http://127.0.0.1:1000", "http://192.168.100.38:1000"]}})
+
 
 
 
