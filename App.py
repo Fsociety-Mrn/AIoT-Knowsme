@@ -9,21 +9,16 @@ import os
 import time
 import shutil
 
-# import board
-# import busio
-# import adafruit_mlx90614
 
 
 app = Flask(__name__)
 CORS(app)
 
-# i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
-# mlx = adafruit_mlx90614.MLX90614(i2c)
+
 
 app.config["FACE_RESULT"] = "",""
 app.config["CAMERA_STATUS"] = "camera is loading",True
 app.config["BGR"] = 0,255,255
-app.config["target_temp"] = ""
 app.config["training"] = False
 
 # face detection
@@ -157,22 +152,6 @@ def facial_training():
     result = JL().Face_Train()
     app.config["training"] = False
     return jsonify(result),200
-
-# Get temperature status =========================================== #
-@app.route('/Temperature', methods=['GET'])
-def Temperature():
-    try:
-        time.sleep(2)
-        targetTemp = "27.8"
-        # targetTemp = "{:.2f}".format(mlx.object_temperature)
-        app.config["target_temp"] = targetTemp
- 
-        return jsonify(targetTemp),200
-    except Exception as E:
-        pass
-        app.config["target_temp"] = 0.0
-        print(E)
-        return jsonify("N/A"),200
     
 # Get temperature status =========================================== #
 @app.route('/check', methods=['GET'])
@@ -215,15 +194,10 @@ def facialRecognition(frame):
     Fbase().firebaseUpdate(
                          keyName=formatted_date,
                          name=result[0],
-                         data="Time In",
+                         data="Time Out",
                          time=formatted_time)
         
-    # temperature
-    Fbase().firebaseUpdate(
-                         keyName=formatted_date,
-                         name=result[0],
-                         data="temp",
-                         time=str(app.config["target_temp"]))
+
 
 # check face blurred level
 def detect_blur_in_face(face_gray,person=None,Blurred=1000):

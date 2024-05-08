@@ -102,42 +102,16 @@
     <div class="container">
         <h1 id="time">11:00 am</h1>
         <h6 id="date">April 3 2024</h6>
-        <p>temperature: </p>
-        <p id="temperature">40</p>
-        <p id="alert"></p>
+
 
         <a href="/Time_in">
-            <button>Time In</button>
+            <button>Time Out</button>
         </a>
         
     </div>
 </div>
 
 <script>
-    
-    var temperatures = "";
-
-    // Get Temperature Function
-    async function get_temperature(){
-        await fetch('/Temperature', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(async response => {
-                    data = await response.json()
-                    // Handle facial recognition result here
-                    console.log(data);
-                    document.getElementById('temperature').textContent = data;
-                    
-                    temperatures = data;
-                    
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-    }
 
     // Status for facial training
     function get_status(){
@@ -183,14 +157,10 @@
         // Set time and date in HTML
         document.getElementById('time').textContent = timeString;
         document.getElementById('date').textContent = dateString;
-        // get_temperature();
     }
 
     // Call updateTimeAndDate function to initialize
     updateTimeAndDate();
-    
-    // update temperature
-    get_temperature();
     
     var Interval_Time;
     var Interval_Temp;
@@ -201,10 +171,7 @@
     
         // Update time and date every second
         Interval_Time = setInterval(updateTimeAndDate(), 1000);
-    
-        // Update time and date every second
-        Interval_Temp = setInterval(get_temperature, 1000);
-    
+
         Interval_Stat = setInterval(get_status, 500);
 
     }

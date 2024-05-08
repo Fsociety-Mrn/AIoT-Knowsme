@@ -95,48 +95,21 @@
     <!-- First row -->
     <div class="container">
         <h1 id="facialStatus">AIoT Knows Me</h1>
-        <h6 id="facialStatus">Time In</h6>
+        <h6 id="facialStatus">Time Out</h6>
         <img id="video" src="{{ url_for('video_feed') }}"/>
     </div>
 
     <!-- Second row -->
     <div class="container">
         <h1 id="result"></h1>
-        <h4 id="status"></h1>
-        <p>temperature: </p>
-        <p id="temperature">40</p>
-      
+        <h4 id="status"></h1>      
     </div>
     
 </div>
 
 <script>
 
-    var temperatures = "";
-
     let NoFaceIsDetected = 0;
-
-    // Get Temperature Function
-    async function get_temperature(){
-        await fetch('/Temperature', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(async response => {
-                    data = await response.json()
-                    // Handle facial recognition result here
-                    console.log(data);
-                    document.getElementById('temperature').textContent = data;
-                    
-                    temperatures = data;
-                    
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-    }
 
     // Status for facial training
     async function get_status(){
@@ -180,9 +153,7 @@
                 });
     }
 
-    
-    // update temperature
-    get_temperature();
+
     
     var Interval_Time;
     var Interval_Temp;
@@ -191,11 +162,6 @@
     
     function StartInterval() {
 
-        // Update time and date every second
-        //Interval_Time = setInterval(updateTimeAndDate(), 1000);
-    
-        // Update time and date every second
-        Interval_Temp = setInterval(get_temperature, 1000);
     
         // status
         Interval_Stat = setInterval(get_status, 500);
