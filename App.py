@@ -122,7 +122,7 @@ def name_register():
     
     # Check that both first and last name are provided
     if not ID['name']:
-        return jsonify({"message": 'enter your fullname'}), 400
+        return jsonify({"message": 'enter your Employee ID'}), 400
     
     result, name = Fbase().firebaseCheck_ID(ID['name'])
     if not result:
@@ -196,8 +196,6 @@ def facialRecognition(frame):
                          name=result[0],
                          data="Time Out",
                          time=formatted_time)
-        
-
 
 # check face blurred level
 def detect_blur_in_face(face_gray,person=None,Blurred=1000):
