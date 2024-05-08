@@ -72,8 +72,8 @@ def face_register():
         filename = secure_filename(file.filename)
         
         # Detect faces in the frame
-        file.save(os.path.join('/home/raspberrypi/Desktop/AIoT-Knowsme/static/time_in', filename))
-        files = cv2.imread(os.path.join('/home/raspberrypi/Desktop/AIoT-Knowsme/static/time_in', filename))
+        file.save(os.path.join('static/time_in', filename))
+        files = cv2.imread(os.path.join('static/time_in', filename))
         gray = cv2.cvtColor(files, cv2.COLOR_BGR2GRAY)
         faces = faceDetection.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(100, 100), flags=cv2.CASCADE_SCALE_IMAGE)
         
@@ -98,7 +98,7 @@ def face_register():
 
 
 def remove_folder():
-    location = "/home/raspberrypi/Desktop/AIoT-Knowsme/Jolo_Recognition/Registered-Faces"
+    location = "Jolo_Recognition/Registered-Faces"
     data = Fbase().firebaseRead("Account")
     
     # Get a list of all folder names from data
@@ -139,7 +139,7 @@ def name_register():
     folder_name = f"{str(name).capitalize()}"
 
     # Define the path to the folder you want to create
-    path = f"/home/raspberrypi/Desktop/AIoT-Knowsme/Jolo_Recognition/Registered-Faces/{folder_name}"
+    path = f"Jolo_Recognition/Registered-Faces/{folder_name}"
 
     # Check if the folder already exists
     if os.path.exists(path):
@@ -225,7 +225,6 @@ def facialRecognition(frame):
                          data="temp",
                          time=str(app.config["target_temp"]))
 
-
 # check face blurred level
 def detect_blur_in_face(face_gray,person=None,Blurred=1000):
         
@@ -291,9 +290,6 @@ def Facial_Detection(camera=None, face_detector=None):
                 timer = 0
                 start_time = time.time()
             
-            
-            app.config["CAMERA_STATUS"] = "Person detected",True
-
             B,G,R = app.config["BGR"]          
             Name,percent = app.config["FACE_RESULT"]
             
