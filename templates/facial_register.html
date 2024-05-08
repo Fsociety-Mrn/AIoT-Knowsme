@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Facial Registration</title>
+<style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f4f4f4;
+    }
+    .container {
+        display: flex;
+        flex-direction: column; /* Align items horizontally */
+        justify-content:  center;
+        align-items: center;
+        text-align: center;
+    }
+    .notification {
+        margin-bottom: 20px;
+        font-size: 18px;
+        color: #000;
+    }
+    input[type="text"],
+    button {
+        border: none;
+        outline: none;
+        padding: 12px 20px;
+        font-size: 16px;
+        border-radius: 20px; /* Rounded corners */
+        background-color: #f4f4f4;
+        color: black;
+        transition: background-color 0.3s, color 0.3s;
+        width: 300px;
+        border: 2px solid #333;
+    }
+    input[type="text"]:focus {
+        background-color: #fff; /* Change background color on focus */
+    }
+    button:hover {
+        background-color: #007bff; /* Blue color on hover */
+        color: #fff;
+    }
+    #video-container {
+        display: none;
+        flex-direction: column; /* Align items horizontally */
+        justify-content:  center;
+        align-items: center;
+    }
+    #video {
+        width: 100%;
+        height: 100%;
+        max-width: 600px;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+
+    <div id="container">
+
+
+        <input type="text" id="name" placeholder="xxxxxx">
+        <p class="notification" id="notification-text">Please Enter your employee ID.</p>
+        <button onclick="name_register_raspberry();">Proceed to Facial Registration</button>
+    </div>
+
+
+    <div id="video-container">
+        <h2 id="status">Align Your Face Properly</h2>
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas" style="display:none;"></canvas>
+    </div>
+</div>
+
+<script>
+    const TimeOut = "http://192.168.100.38:2000"
+
+    const nameInput = document.getElementById('name');
+    const notificationText = document.getElementById('notification-text');
+    const showCameraBtn = document.getElementById('container');
+    const videoContainer = document.getElementById('video-container');
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let captureInterval; // Variable to hold the interval ID
+
+    // name register
+    async function name_register(){
+
+  
+
+        // Send POST request to backend API
+        const response = await fetch('/name_register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({'name': nameInput.value })
+        });
+
+
+        if (response.ok){
+            const data = await response.json();
+            console.log(data)
+
+
+
+            notificationText.textContent = 'Align your face properly.';
+            showCamera();
+            showCameraBtn.style.backgroundColor = "#333";
+
+            return;
+        }
+
+        notificationText.textContent = 'Please enter your name.';
+
+    }
+
+    // name register for rasberry
+    async function name_register_raspberry(){
+
+        console.log(nameInput.value)
+
+        // Send POST request to backend API
+        const response = await fetch(TimeOut + '/name_register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({'name': nameInput.value })
+        });
+
+
+        if (response.ok){
+            const data = await response.json();
+            name_register();
+            console.log(data)
+        }
+
+
+
+    }
+
+
+    // open the camera
+    function showCamera() {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+                video.play();
+                videoContainer.style.display = 'flex';
+                showCameraBtn.style.display = 'none';
+
+                startCapture();
+            })
+            .catch(err => {
+                console.error('Error accessing the camera:', err);
+            });
+    }
+
+    // capture images
+    function captureImages() {
+        // Set canvas dimensions to match the video dimensions
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+    
+        // Draw the current frame of the video onto the canvas
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+        // Convert canvas to blob (image file)
+        canvas.toBlob(async function(blob) {
+            if (blob) { // Check if blob is not null or undefined
+                // Create FormData object and append the blob
+                var formData = new FormData();
+                formData.append('file', blob, 'image.jpg');
+
+                await send_to_TimeOut(formData);
+
+                // Send POST request to backend API
+                fetch('/face_register', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Handle facial recognition result here
+                        return response.json();
+                    } else {
+                        throw new Error('Network response was not ok.');
+                    }
+                })
+                .then(data => {
+                    console.log(data);
+                    document.getElementById('status').textContent = String(data.message);
+
+                    if (data.result){
+                        location.href = "/face_training"
+                    }
+                // document.getElementById('result').textContent = data.name[0];
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            } else {
+                console.error('Failed to generate blob');
+            }
+        }, 'image/jpeg'); // Specify image format (e.g., JPEG)
+    }
+
+    async function send_to_TimeOut(formData){
+        
+        // Send POST request to backend API
+        await fetch(TimeOut + '/face_register', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                    // Handle facial recognition result here
+                return response.json();
+            } else {
+                throw new Error('Network response was not ok.');
+            }
+        })
+        .then(data => {
+            console.log(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+
+    // Function to start capturing images
+    function startCapture() {
+        captureInterval = setInterval(captureImages, 300); // Call captureImages every 1 second
+    }
+
+    // Function to stop capturing images
+    function stopCapture() {
+        clearInterval(captureInterval); // Stop the interval
+    }
+
+
+    // Event listener for beforeunload event
+    window.addEventListener('beforeunload', stopCapture());
+</script>
+</body>
+</html>

@@ -9,16 +9,11 @@ import os
 import time
 import shutil
 
-# import board
-# import busio
-# import adafruit_mlx90614
 
 
 app = Flask(__name__)
 CORS(app)
 
-# i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
-# mlx = adafruit_mlx90614.MLX90614(i2c)
 
 app.config["FACE_RESULT"] = "",""
 app.config["CAMERA_STATUS"] = "camera is loading",True
@@ -346,6 +341,11 @@ def Facial_Detection(camera=None, face_detector=None):
 def index():
     return render_template('index.html')
 
+# facial register =========================================== #
+@app.route('/facial_register')
+def facial_register():
+    return render_template('facial_register.html')
+
 # facial training =========================================== #
 @app.route('/face_training')
 def face_training():
@@ -367,4 +367,4 @@ if __name__ == '__main__':
         # host='192.168.100.134',
         host='0.0.0.0',
         debug=True,
-        port=2000)
+        port=1000)
