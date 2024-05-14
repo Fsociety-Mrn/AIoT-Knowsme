@@ -198,6 +198,32 @@
         // get_temperature();
     }
 
+
+      // Get serial com
+       function serial_com(){
+         fetch('/serial_IR', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(async response => {
+                    data = await response.json()
+                    // Handle facial recognition result here
+                    console.log(parseInt(data)===1);
+
+                    if (parseInt(data)===1){
+                        location.href = "/Time_in";
+                    }
+
+                    
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+    }
+
+
     // Call updateTimeAndDate function to initialize
     updateTimeAndDate();
     
@@ -205,9 +231,10 @@
     get_temperature();
     
     var Interval_Time;
-    var Interval_Temp;
+    // var Interval_Temp;
     var Interval_Stat;
     var Interval_Cap;
+    var Interval_IR;
     
     function StartInterval() {
     
@@ -219,12 +246,15 @@
     
         Interval_Stat = setInterval(get_status, 500);
 
+        Interval_IR = setInterval(serial_com, 1000);
+
     }
     
     function stopInterval(){
         clearInterval(Interval_Time);
         clearInterval(Interval_Temp);
         clearInterval(Interval_Stat);
+        clearInterval(Interval_IR);
     }
     
     window.onload = function() {
