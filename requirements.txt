@@ -1,0 +1,12 @@
+board==1.0
+facenet_pytorch==2.5.3
+Flask==2.3.2
+Flask_Cors==4.0.0
+opencv_contrib_python==4.9.0.80
+opencv_python==4.5.5.64
+opencv_python_headless==4.9.0.80
+Pyrebase4==4.7.1
+pyserial==3.5
+torch==2.0.1
+torchvision==0.15.2
+Werkzeug==3.0.3
