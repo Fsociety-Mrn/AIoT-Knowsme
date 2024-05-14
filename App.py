@@ -9,18 +9,34 @@ import os
 import time
 import shutil
 
-
+import serial
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://127.0.0.1:1000", "http://192.168.100.38:1000"]}})
-
-
 
 
 app.config["FACE_RESULT"] = "",""
 app.config["CAMERA_STATUS"] = "camera is loading",True
 app.config["BGR"] = 0,255,255
 app.config["training"] = False
+
+
+# serial comunication
+@app.route('/serial_IR', methods=['GET'])
+def serial_IR():
+    
+    try:
+        # Define the serial port and baud rate
+        ser = serial.Serial('COM4', 9600, timeout=1)  # Replace 'COM3' with the correct port name
+        ser.reset_input_buffer()
+        time.sleep(2)
+        ser.flush()
+        data = ser.readline().decode('utf-8').rstrip()
+    
+        ser.close()
+        return jsonify(data)
+    except:
+        return jsonify(0)
 
 # face detection
 faceDetection = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
