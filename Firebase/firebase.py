@@ -14,14 +14,13 @@ class Firebase:
         self.db = self.firebase.database() # realTime database
         
     # update the current data
-    def firebaseUpdate(self,keyName, name,data,time):
-        
-        print("check")
-        if not name == 'No match detected':
-            self.db.child("History").child(keyName).child(name).child(data).set(time)
-            return
-        
-        self.db.child("History").child(keyName).child(name).push({ data:time })
+    def firebaseUpdate(self,keyName, name,data,time,Temp="N/A"):
+        self.db.child("History").child(keyName).push({
+                                                        "name": name,
+                                                        "time": time,
+                                                        "data": data,
+                                                        "temp": Temp
+                                                    })
     
     def firebaseCheck_ID(self,ID):
         data = self.firebaseRead("Account")
@@ -35,10 +34,6 @@ class Firebase:
     def firebaseRead(self,ID):
         data = self.db.child(ID).get().val()
         return data
-    
-    
-# data = Firebase().firebaseCheck_ID("2019-201745")
-# print(data)
 
 
 

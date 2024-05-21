@@ -234,14 +234,8 @@ def facialRecognition(frame):
                          keyName=formatted_date,
                          name=result[0],
                          data="Time In",
-                         time=formatted_time)
-        
-    # temperature
-    Fbase().firebaseUpdate(
-                         keyName=formatted_date,
-                         name=result[0],
-                         data="temp",
-                         time=str(app.config["target_temp"]))
+                         time=formatted_time,
+                         Temp=str(app.config["target_temp"]))
 
 # check face blurred level
 def detect_blur_in_face(face_gray,person=None,Blurred=1000):
