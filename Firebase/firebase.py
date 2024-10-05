@@ -21,7 +21,6 @@ class Firebase:
                                                         "data": data,
                                                         "temp": Temp
                                                     })
-    
     def firebaseCheck_ID(self,ID):
         data = self.firebaseRead("Account")
         for __, each in data.items():
@@ -34,6 +33,10 @@ class Firebase:
     def firebaseRead(self,ID):
         data = self.db.child(ID).get().val()
         return data
+    
+    
+# data = Firebase().firebaseCheck_ID("2019-201745")
+# print(data)
 
 
 

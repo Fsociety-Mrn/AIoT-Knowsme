@@ -20,12 +20,12 @@ CORS(app)
 
 app.config["FACE_RESULT"] = "",""
 app.config["CAMERA_STATUS"] = "camera is loading",True
-app.config["BGR"] = 0,255,255
-app.config["target_temp"] = ""
+app.config["BGR"] = 0,255,25
+app.config["target_temp"] = "35.6"
 app.config["training"] = False
 
 
-
+# NOTE: pag i irun yung both sytem dapat http:127.0.0.1:1000 palagi irurun
 
 # serial comunication
 @app.route('/serial_IR', methods=['GET'])
@@ -33,12 +33,12 @@ def serial_IR():
     
     try:
         # Define the serial port and baud rate
-        ser = serial.Serial('COM4', 9600, timeout=1)  # Replace 'COM3' with the correct port name
+        ser = serial.Serial('COM5', 9600, timeout=1)  # Replace 'COM3' with the correct port name
         ser.reset_input_buffer()
         time.sleep(2)
         ser.flush()
         data = ser.readline().decode('utf-8').rstrip()
-    
+        app.config["target_temp"] = str(data).split(",")[0]
         ser.close()
         return jsonify(data)
     except:
@@ -161,6 +161,7 @@ def name_register():
 
     # Check if the folder already exists
     if os.path.exists(path):
+
         # Remove all contents of the folder
         shutil.rmtree(path)
 
@@ -172,6 +173,9 @@ def name_register():
 
 @app.route('/facial_training', methods=['GET'])
 def facial_training():
+
+    remove_folder()
+    
     result = JL().Face_Train()
     app.config["training"] = False
     return jsonify(result),200
@@ -180,12 +184,9 @@ def facial_training():
 @app.route('/Temperature', methods=['GET'])
 def Temperature():
     try:
-        time.sleep(2)
-        targetTemp = "27.8"
-        # targetTemp = "{:.2f}".format(mlx.object_temperature)
-        app.config["target_temp"] = targetTemp
+   
  
-        return jsonify(targetTemp),200
+        return jsonify(app.config["target_temp"]),200
     except Exception as E:
         pass
         app.config["target_temp"] = 0.0
@@ -195,7 +196,7 @@ def Temperature():
 # Get temperature status =========================================== #
 @app.route('/check', methods=['GET'])
 def CHECK():
-    return jsonify("tangina mo carl de roque uwi nako kaya ka madaming basher sa regular e"),200
+    return jsonify("hello friend"),200
 
 # Facial Detection =========================================== #
 @app.route('/video_feed')
@@ -212,8 +213,13 @@ def video_feed():
     return Response(Facial_Detection(camera=camera, face_detector=face_detection), 
                         mimetype='multipart/x-mixed-replace; boundary=frame')
 
+last_update_time = None
+
 # Facial Recognition function
 def facialRecognition(frame):
+
+    global last_update_time
+
     # facial reconition
     result = JL().Face_Compare(face=frame,threshold=0.7)
 
@@ -229,13 +235,22 @@ def facialRecognition(frame):
 
     # Format time as "Hour:Minute AM/PM" (e.g., "1:52 PM")
     formatted_time = current_datetime.strftime("%I:%M %p")
+
+
+
+    if str(result[0])== "No match detected":
+        return 
                 
+
     Fbase().firebaseUpdate(
-                         keyName=formatted_date,
-                         name=result[0],
-                         data="Time In",
-                         time=formatted_time,
-                         Temp=str(app.config["target_temp"]))
+            keyName=formatted_date,
+            name=result[0],
+            data="Time In",
+            time=formatted_time,
+            Temp=str(app.config["target_temp"])
+        )
+
+
 
 # check face blurred level
 def detect_blur_in_face(face_gray,person=None,Blurred=1000):
@@ -282,7 +297,11 @@ def Facial_Detection(camera=None, face_detector=None):
             faceCrop = frame[y:y+h, x:x+w]
             face_gray = cv2.cvtColor(faceCrop, cv2.COLOR_BGR2GRAY)
             
-            blureness = detect_blur_in_face(face_gray)
+            # Blurred Paramater = addjust nyo lang pag di marecognize yung prof 
+            # either babaan or tatanggalin lang ex:  detect_blur_in_face(face_gray=face_gray)
+            # or babaan  detect_blur_in_face(face_gray=face_gray,Blurred=700)
+            # ang default ay 1000
+            blureness = detect_blur_in_face(face_gray=face_gray,Blurred=0)
             
             
             
@@ -291,9 +310,8 @@ def Facial_Detection(camera=None, face_detector=None):
             start_time = time.time()
 
             # Check if 3 seconds have elapsed since the last send
-            if timer >= 1:
+            if timer >= 2:
                 app.config["BGR"] = 0,255,255
-                
                 
                 if blureness:
                     facialRecognition(frame=frame)
@@ -308,7 +326,7 @@ def Facial_Detection(camera=None, face_detector=None):
             if blureness:
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
                 cv2.putText(frame,Name + " " + str(percent),(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
-            
+          
    
         elif len(faces) > 1:
             
@@ -316,32 +334,36 @@ def Facial_Detection(camera=None, face_detector=None):
                 
                 app.config["CAMERA_STATUS"] = "Multiple person is detected",True
                 
-                face_crop = frame[y:y+h, x:x+w]
-                face_gray = cv2.cvtColor(faceCrop, cv2.COLOR_BGR2GRAY)
-            
-                # Calculate new width and height
-                scale_factor = 1.2
-                new_w = int(w * scale_factor)
-                new_h = int(h * scale_factor)
+                try:
+                    face_crop = frame[y:y+h, x:x+w]
+                    face_gray = cv2.cvtColor(faceCrop, cv2.COLOR_BGR2GRAY)
 
-                # Adjust x and y to keep the center of the face in the crop
-                new_x = max(0, x - (new_w - w) // 2)
-                new_y = max(0, y - (new_h - h) // 2)
+                    # Calculate new width and height
+                    scale_factor = 1.2
+                    new_w = int(w * scale_factor)
+                    new_h = int(h * scale_factor)
 
-                # Crop the image with the new dimensions
-                faceCrop = frame[new_y-40:new_y+new_h+30, new_x-40:new_x+new_w+30]
+                    # Adjust x and y to keep the center of the face in the crop
+                    new_x = max(0, x - (new_w - w) // 2)
+                    new_y = max(0, y - (new_h - h) // 2)
+
+                    # Crop the image with the new dimensions
+                    faceCrop = frame[new_y-40:new_y+new_h+30, new_x-40:new_x+new_w+30]
                 
-                blureness = detect_blur_in_face(face_gray,f"person_{i}",1500)
+                    blureness = detect_blur_in_face(face_gray,f"person_{i}",1500)
                 
-                if blureness:
-                    facialRecognition(frame=face_crop)
+                    if blureness:
+                        facialRecognition(frame=face_crop)
                 
-                    B,G,R = app.config["BGR"]          
-                    Name,percent = app.config["FACE_RESULT"]
+                        B,G,R = app.config["BGR"]          
+                        Name,percent = app.config["FACE_RESULT"]
             
-                    cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
-                    cv2.putText(frame,f"person_{i}: " + Name + " " + str(percent),(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
-                    
+                        cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
+                        cv2.putText(frame,f"person_{i}: " + Name + " " + str(percent),(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
+                except:
+                    pass   
+
+           
         else:
             app.config["BGR"] = 0,255,255
             app.config["FACE_RESULT"] = "",""

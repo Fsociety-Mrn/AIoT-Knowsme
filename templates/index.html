@@ -114,15 +114,41 @@
     <div class="container">
         <h1 id="time">11:00 am</h1>
         <h6 id="date">April 3 2024</h6>
+
+       
         <p>temperature: </p>
-        <p id="temperature">40</p>
+        <p id="temperature" style="color: red;">40 °C</p>
+        <p id="temp_status" style="color: red;">Warning!</p>
         <p id="alert"></p>
 
-        <a href="/Time_in">
+
+
+        <!-- <a href="/Time_in">
             <button>Time In</button>
-        </a>
+        </a> -->
         
+
+        <a href="/facial_register">
+            <button>
+                Facial Register
+            </button>
+           
+        </a>
+
     </div>
+
+           <!-- third row
+    <div class="container">
+
+           <a href="/facial_register">
+               <button>
+                   Facial Register
+               </button>
+              
+           </a>
+   
+             
+       </div> -->
 </div>
 
 <script>
@@ -209,13 +235,31 @@
                 })
                 .then(async response => {
                     data = await response.json()
-                    // Handle facial recognition result here
-                    console.log(parseInt(data)===1);
 
-                    if (parseInt(data)===1){
+                    const data_value = parseInt(data.split(',')[1])
+
+                    if (parseInt(data_value)===0 && parseFloat(data.split(',')[0]) < 39){
                         location.href = "/Time_in";
                     }
 
+                    document.getElementById('temperature').textContent = data.split(',')[0] + "°C:";
+                    document.getElementById('temperature').style.color = 'blue';
+                    document.getElementById('temp_status').style.color = 'black';
+                    document.getElementById('temp_status').textContent = "Normal temperature";
+
+                    if (parseFloat(data.split(',')[0]) > 36 && parseFloat(data.split(',')[0]) < 38 ){
+                        document.getElementById('temperature').style.color = 'yellow';
+                        document.getElementById('temp_status').style.color = 'yellow';
+
+                        document.getElementById('temp_status').textContent = "Warning!";
+                    }
+
+                    if (parseFloat(data.split(',')[0]) > 39){
+                        document.getElementById('temperature').style.color = 'red';
+                        document.getElementById('temp_status').style.color = 'red';
+
+                        document.getElementById('temp_status').textContent = "High Temperature";
+                    }
                     
                 })
                 .catch(error => {
@@ -227,8 +271,7 @@
     // Call updateTimeAndDate function to initialize
     updateTimeAndDate();
     
-    // update temperature
-    get_temperature();
+
     
     var Interval_Time;
     // var Interval_Temp;
@@ -239,20 +282,14 @@
     function StartInterval() {
     
         // Update time and date every second
-        Interval_Time = setInterval(updateTimeAndDate(), 1000);
-    
-        // Update time and date every second
-        Interval_Temp = setInterval(get_temperature, 1000);
-    
+        Interval_Time = setInterval(updateTimeAndDate, 1000);
         Interval_Stat = setInterval(get_status, 500);
-
         Interval_IR = setInterval(serial_com, 1000);
 
     }
     
     function stopInterval(){
         clearInterval(Interval_Time);
-        clearInterval(Interval_Temp);
         clearInterval(Interval_Stat);
         clearInterval(Interval_IR);
     }

@@ -67,12 +67,14 @@
 
 
         <input type="text" id="name" placeholder="xxxxxx">
+     
         <p class="notification" id="notification-text">Please Enter your employee ID.</p>
         <button onclick="name_register_raspberry();">Proceed to Facial Registration</button>
     </div>
 
 
     <div id="video-container">
+        <p class="notification" id="notification-text-2"></p>
         <h2 id="status">Align Your Face Properly</h2>
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas" style="display:none;"></canvas>
@@ -80,9 +82,13 @@
 </div>
 
 <script>
-    const TimeOut = "http://192.168.100.38:2000"
+//  NOTE: pag sstart yung App.py Both Time In and Time OUT 
+//        * Running on http://192.168.x.x:xxxx na ganyan format ayan kukunin IP
+    // papalitan din ako ng IP address dito ng Time Out
+    const TimeOut = "http://192.168.0.102:2000"
 
     const nameInput = document.getElementById('name');
+    const notificationText_2 = document.getElementById('notification-text-2');
     const notificationText = document.getElementById('notification-text');
     const showCameraBtn = document.getElementById('container');
     const videoContainer = document.getElementById('video-container');
@@ -113,7 +119,8 @@
 
 
 
-            notificationText.textContent = 'Align your face properly.';
+            notificationText_2.textContent = 'Please remove your glasses and hats to ensure a smooth facial recognition process.';
+            notificationText.textContent = 'Align your face properly Thank You';
             showCamera();
             showCameraBtn.style.backgroundColor = "#333";
 
@@ -198,7 +205,8 @@
                     }
                 })
                 .then(data => {
-                    console.log(data);
+                    
+            notificationText_2.textContent = 'Please remove your glasses and hats to ensure a smooth facial recognition process.';
                     document.getElementById('status').textContent = String(data.message);
 
                     if (data.result){

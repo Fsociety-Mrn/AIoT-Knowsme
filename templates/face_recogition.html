@@ -102,7 +102,8 @@
     <!-- Second row -->
     <div class="container">
         <h1 id="result"></h1>
-        <h4 id="status"></h1>
+        <h6 id="temp"></h1>
+        <h3 id="status">Access Granted</h4>
     </div>
 
         <!-- third row -->
@@ -112,8 +113,10 @@
              
         </h3>
 
+
+
           
-       </div>
+    </div>
     
 </div>
 
@@ -133,11 +136,10 @@
                 })
                 .then(async response => {
                     data = await response.json()
-                    // Handle facial recognition result here
-                    console.log(data);
-                    document.getElementById('temperature').textContent = data;
+
+                    document.getElementById('temp').textContent = data;
                     
-                    temperatures = data;
+           
                     
                 })
                 .catch(error => {
@@ -156,28 +158,43 @@
                 .then(async response => {
                     data = await response.json()
                     
-                    console.log(data)
+            
 
                     document.getElementById('status').textContent = data.camera_status;
                     document.getElementById('result').textContent = data.name;
+                    get_temperature();
 
                     if (data.camera_status === 'Access Granted'){
-
+                        // document.getElementById('welcome').textContent = "welcome";
                         NoFaceIsDetected = 0;
 
+                        // location.href = "/";
+                        document.getElementById('status').style.color = 'green';
+                        document.getElementById('video').src = "";
                         setTimeout(function(){
-                             location.href = "/";
-                        }, 3000); 
+                            location.href = "/";
+                        }, 6000); 
+           
+
+                    }
+                    
+                    if (data.camera_status === 'No match detected'){
+                        document.getElementById('status').style.color = 'red';
+                        setTimeout(function(){
+                            location.href = "/";
+                        }, 5000); 
                     }
 
-           
+                    
+
                     setTimeout(function(){
                         NoFaceIsDetected = NoFaceIsDetected + 1;
-                        if (data.camera_status === "No Face is detected" && NoFaceIsDetected === 5){
+                        if (data.camera_status === "No Face is detected" ){
                             location.href = "/";
+
+                            document.getElementById('status').style.color = 'red';
                         }
-                       
-                   }, 5000); 
+                   }, 2500); 
               
  
                     
@@ -188,9 +205,30 @@
                 });
     }
 
+
+          // Get serial com
+          function serial_com(){
+         fetch('/serial_IR', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(async response => {
+                    data = await response.json()
+
+    
+
+                    document.getElementById('temperature').textContent = data.split(',')[0];
+                    
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+    }
     
     // update temperature
-    get_temperature();
+    // get_status();
     
     var Interval_Time;
     var Interval_Temp;
@@ -200,10 +238,10 @@
     function StartInterval() {
 
         // Update time and date every second
-        //Interval_Time = setInterval(updateTimeAndDate(), 1000);
+        // Interval_Time = setInterval(updateTimeAndDate(), 1000);
     
         // Update time and date every second
-        Interval_Temp = setInterval(get_temperature, 1000);
+        // Interval_Temp = setInterval(get_temperature, 1000);
     
         // status
         Interval_Stat = setInterval(get_status, 500);
