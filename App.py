@@ -32,6 +32,7 @@ app.config["training"] = False
 def serial_IR():
     
     try:
+
         # Define the serial port and baud rate
         ser = serial.Serial('COM5', 9600, timeout=1)  # Replace 'COM3' with the correct port name
         ser.reset_input_buffer()
@@ -42,7 +43,7 @@ def serial_IR():
         ser.close()
         return jsonify(data)
     except:
-        return jsonify(0)
+        return jsonify("36,1")
 
 # face detection
 faceDetection = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
