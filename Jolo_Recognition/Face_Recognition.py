@@ -67,7 +67,8 @@ class JoloRecognition:
                         # append the comparing result
                         match_list.append(dist)
 
-                
+                        percent = self.__face_distance_to_conf(face_distance=dist,face_match_threshold=threshold) * 100
+                                                
                     # check if there is recognize faces               
                     if len(match_list) > 0:
                     
@@ -91,19 +92,19 @@ class JoloRecognition:
                             return (self.Name_List[idx_min], str('{:.2f}%'.format(percent)))
                         else:
             
-                            return ('No match detected', None)
+                            return ("No match detected", str('{:.2f}%'.format(percent)))
                 
                     else:
                         print("No match List")
-                        return ('No match detected', None)
+                        return ("No match detected",  str('{:.2f}%'.format(percent)))
                 
                 else:
                     print("faces are below 90%")
-                    return ('No match detected', None)
+                    return ("No match detected", None)
                 
         except Exception as e:
             print("error: ",e)
-            return('No match detected', None)
+            return("No match detected", None)
                 
     # training from dataset
     def Face_Train(self, Dataset_Folder="Jolo_Recognition/Registered-Faces", location="Jolo_Recognition/Model"):

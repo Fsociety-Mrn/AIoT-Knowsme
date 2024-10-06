@@ -164,12 +164,11 @@
                     40 <sup style="vertical-align: top; font-size: 60%;">°C</sup>
                 </h1>
                 
-     
             </div>
             
             <div class="row">
                 <div class="warning" id="temp_status_container">
-                    <span id="temp_status">Warning!</span>
+                    <span id="temp_status">Attention! Your <strong>temperature is high</strong>.</span>
                 </div>
             </div>
  
@@ -256,7 +255,7 @@
                     document.getElementById('temperature').innerHTML = data.split(',')[0] + "<sup style=\"vertical-align: top; font-size: 60%;\">°C</sup>";
                     document.getElementById('temperature').style.color = 'blue';
                     document.getElementById('temp_status_container').style.color = 'blue';
-                    document.getElementById('temp_status').textContent = "Great! Your temperature is <strong>normal</strong>.";
+                    document.getElementById('temp_status').innerHTML = "Great! Your temperature is <strong>normal</strong>.";
 
                     document.getElementById('high').classList.add('hidden'); // Hide high icon
                     document.getElementById('warning').classList.add('hidden'); // Hide warning icon

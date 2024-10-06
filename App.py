@@ -43,7 +43,7 @@ def serial_IR():
         ser.close()
         return jsonify(data)
     except:
-        return jsonify("36,1")
+        return jsonify("33,1")
 
 # face detection
 faceDetection = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -52,11 +52,14 @@ ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'}
 # face recognition api | Time in  =========================================== #
 @app.route('/face_recognition', methods=['GET'])
 def face_recognition():
-    name,__ = app.config["FACE_RESULT"] 
+    name,percent = app.config["FACE_RESULT"] 
     message,status = app.config["CAMERA_STATUS"]
+    
+    print(name,percent)
     return jsonify({
         "camera_status": message,
         "status": status,
+        "percent": percent,
         "name": name
     }),200
      
@@ -204,7 +207,7 @@ def CHECK():
 def video_feed():
 
     app.config["FACE_RESULT"] = "",""
-    app.config["CAMERA_STATUS"] = "camera is loading",True
+    app.config["CAMERA_STATUS"] = "",True
     app.config["BGR"] = 0,255,255
 
     # load a camera and face detection
@@ -223,7 +226,7 @@ def facialRecognition(frame):
 
     # facial reconition
     result = JL().Face_Compare(face=frame,threshold=0.7)
-
+    print(result)
     app.config["FACE_RESULT"] = result
     app.config["BGR"] = (0,0,255) if result[0] == "No match detected" else (0,255,0 )
     app.config["CAMERA_STATUS"] = ("Access Denied",True) if result[0] == "No match detected" else ("Access Granted",False) 
