@@ -139,7 +139,7 @@
 
             </div>
   
-            <div id="facePercentValue" class="col-6 d-flex align-items-center justify-content-center">
+            <div id="facePercentValue" class="col-6 d-flex align-items-center justify-content-center d-none">
 
                 <img src="/static/icons/face-viewfinder.svg" alt="description" class="me-2">
                 <p id="percent" class="h3 mb-0">0 %</p>
@@ -212,9 +212,11 @@
                     document.getElementById('status').textContent = data.camera_status;
                     document.getElementById('result').textContent = data.name;
                     document.getElementById('percent').textContent = data.percent;
-  
+                    
+                    /*
                     document.getElementById('temperatureValue').classList.add('d-none');
                     document.getElementById('facePercentValue').classList.add('d-none');
+                    */
 
                     get_temperature();
 
@@ -236,22 +238,24 @@
 
                     }
                     
-                    if (data.camera_status === 'No match detected'){
-                        document.getElementById('percent').textContent = data.percent;
-                            document.getElementById('facePercentValue').classList.remove('d-none');
-                            document.getElementById('result').style.color = 'red';
-                            document.getElementById('status').style.color = 'red';
-             
-                    }
+        console.log(data.camera_status); // Check the value of camera_status
+        if (String(data.camera_status).replace(" ","").toLowerCase() === "nofaceisdetected"){
+    document.getElementById('percent').textContent = data.percent;
+    document.getElementById('facePercentValue').classList.remove('d-none');
+    document.getElementById('result').style.color = 'red';
+    document.getElementById('status').style.color = 'red';
+} else {
+    console.log('Condition not met'); // This will log if the condition is not met
+}
 
-                    if (data.camera_status === "No Face is detected" ){
+if (String(data.camera_status).replace(" ","").toLowerCase() === "nofaceisdetected"){
                         
                         document.getElementById('result').style.color = 'red';
                         document.getElementById('status').style.color = 'red';
            
                      }
 
-          
+                    /*
                     setTimeout(function(){
                         NoFaceIsDetected = NoFaceIsDetected + 1;
                         if (data.camera_status === "No Face is detected" ){
@@ -261,7 +265,7 @@
                             document.getElementById('status').style.color = 'red';
                         }
                    }, 3000); 
-            
+                    */
                  
                 })
                 .catch(error => {

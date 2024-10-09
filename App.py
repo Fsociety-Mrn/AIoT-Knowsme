@@ -240,19 +240,16 @@ def facialRecognition(frame):
     # Format time as "Hour:Minute AM/PM" (e.g., "1:52 PM")
     formatted_time = current_datetime.strftime("%I:%M %p")
 
-
-
-    if str(result[0])== "No match detected":
+    if str(result[0]) == "No match detected":
         return 
                 
-
-    Fbase().firebaseUpdate(
-            keyName=formatted_date,
-            name=result[0],
-            data="Time In",
-            time=formatted_time,
-            Temp=str(app.config["target_temp"])
-        )
+    # Fbase().firebaseUpdate(
+    #         keyName=formatted_date,
+    #         name=result[0],
+    #         data="Time In",
+    #         time=formatted_time,
+    #         Temp=str(app.config["target_temp"])
+    #     )
 
 
 
