@@ -45,11 +45,12 @@ ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'}
 # face recognition api | Time in  =========================================== #
 @app.route('/face_recognition', methods=['GET'])
 def face_recognition():
-    name,__ = app.config["FACE_RESULT"] 
+    name,percent = app.config["FACE_RESULT"] 
     message,status = app.config["CAMERA_STATUS"]
     return jsonify({
         "camera_status": message,
         "status": status,
+        "percent": percent,
         "name": name
     }),200
      
@@ -195,7 +196,7 @@ def video_feed():
 
 # Facial Recognition function
 def facialRecognition(frame):
-    # facial reconition
+
     result = JL().Face_Compare(face=frame,threshold=0.7)
 
     app.config["FACE_RESULT"] = result
@@ -211,8 +212,9 @@ def facialRecognition(frame):
     # Format time as "Hour:Minute AM/PM" (e.g., "1:52 PM")
     formatted_time = current_datetime.strftime("%I:%M %p")
     
-    if str(result[0])== "No match is detected":
+    if str(result[0])== "No match detected":
         return 
+    
     Fbase().firebaseUpdate(
                          keyName=formatted_date,
                          name=result[0],
@@ -230,8 +232,7 @@ def detect_blur_in_face(face_gray,person=None,Blurred=1000):
         
     Face_blured = float("{:.2f}".format(variance))
     
-    print(person,Face_blured)
-    
+
     return True if Face_blured > Blurred else False
     
 def Facial_Detection(camera=None, face_detector=None):
