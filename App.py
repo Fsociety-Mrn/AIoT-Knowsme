@@ -54,8 +54,7 @@ ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'}
 def face_recognition():
     name,percent = app.config["FACE_RESULT"] 
     message,status = app.config["CAMERA_STATUS"]
-    
-    print(name,percent)
+  
     return jsonify({
         "camera_status": message,
         "status": status,
@@ -243,13 +242,13 @@ def facialRecognition(frame):
     if str(result[0]) == "No match detected":
         return 
                 
-    # Fbase().firebaseUpdate(
-    #         keyName=formatted_date,
-    #         name=result[0],
-    #         data="Time In",
-    #         time=formatted_time,
-    #         Temp=str(app.config["target_temp"])
-    #     )
+    Fbase().firebaseUpdate(
+            keyName=formatted_date,
+            name=result[0],
+            data="Time In",
+            time=formatted_time,
+            Temp=str(app.config["target_temp"])
+        )
 
 
 
@@ -262,7 +261,7 @@ def detect_blur_in_face(face_gray,person=None,Blurred=1000):
     # Calculate the variance of the Laplacian
     variance = laplacian.var()
         
-    Face_blured = float("{:.2f}".format(variance))
+    Face_blured = float("{:.2f}".format(variance)) 
     
     print(person,Face_blured)
     
