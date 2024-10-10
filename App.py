@@ -12,7 +12,8 @@ import shutil
 import serial
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["http://127.0.0.1:1000", "http://192.168.100.38:1000"]}})
+ 
+CORS(app, resources={r"/*": {"origins": ["http://127.0.0.1:1000", "http://192.168.0.101:1000"]}})
 
 
 app.config["FACE_RESULT"] = "",""
@@ -27,12 +28,11 @@ def serial_IR():
     
     try:
         # Define the serial port and baud rate
-        ser = serial.Serial('COM4', 9600, timeout=1)  # Replace 'COM3' with the correct port name
+        ser = serial.Serial('COM8', 9600, timeout=1)  # Replace 'COM3' with the correct port name
         ser.reset_input_buffer()
         time.sleep(2)
         ser.flush()
         data = ser.readline().decode('utf-8').rstrip()
-    
         ser.close()
         return jsonify(data)
     except:
@@ -166,6 +166,9 @@ def name_register():
 
 @app.route('/facial_training', methods=['GET'])
 def facial_training():
+
+    remove_folder()
+
     result = JL().Face_Train()
     app.config["training"] = False
     return jsonify(result),200
@@ -173,7 +176,7 @@ def facial_training():
 # Get temperature status =========================================== #
 @app.route('/check', methods=['GET'])
 def CHECK():
-    return jsonify("tangina mo carl de roque uwi nako kaya ka madaming basher sa regular e"),200
+    return jsonify("hello friend"),200
 
 # Facial Detection =========================================== #
 @app.route('/video_feed')
@@ -207,7 +210,9 @@ def facialRecognition(frame):
 
     # Format time as "Hour:Minute AM/PM" (e.g., "1:52 PM")
     formatted_time = current_datetime.strftime("%I:%M %p")
-                
+    
+    if str(result[0])== "No match is detected":
+        return 
     Fbase().firebaseUpdate(
                          keyName=formatted_date,
                          name=result[0],
@@ -259,7 +264,7 @@ def Facial_Detection(camera=None, face_detector=None):
             faceCrop = frame[y:y+h, x:x+w]
             face_gray = cv2.cvtColor(faceCrop, cv2.COLOR_BGR2GRAY)
             
-            blureness = detect_blur_in_face(face_gray)
+            blureness = detect_blur_in_face(face_gray=face_gray)
             
             
             
@@ -268,7 +273,7 @@ def Facial_Detection(camera=None, face_detector=None):
             start_time = time.time()
 
             # Check if 3 seconds have elapsed since the last send
-            if timer >= 1:
+            if timer >= 2:
                 app.config["BGR"] = 0,255,255
                 
                 

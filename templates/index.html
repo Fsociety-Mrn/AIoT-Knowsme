@@ -117,9 +117,9 @@
         <h6 id="date">April 3 2024</h6>
 
 
-        <a href="/Time_in">
+        <!-- <a href="/Time_in">
             <button>Time Out</button>
-        </a>
+        </a> -->
         
     </div>
 </div>
@@ -184,7 +184,7 @@
                .then(async response => {
                    data = await response.json()
                    // Handle facial recognition result here
-                   console.log(parseInt(data)===1);
+                   console.log(parseInt(data));
 
                    if (parseInt(data)===1){
                        location.href = "/Time_in";
@@ -210,7 +210,7 @@
     function StartInterval() {
     
         // Update time and date every second
-        Interval_Time = setInterval(updateTimeAndDate(), 1000);
+        Interval_Time = setInterval(updateTimeAndDate, 1000);
 
         Interval_Stat = setInterval(get_status, 500);
 

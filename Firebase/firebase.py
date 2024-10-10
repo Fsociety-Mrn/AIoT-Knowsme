@@ -21,8 +21,6 @@ class Firebase:
                                                         "data": data,
                                                         "temp": Temp
                                                     })
-    
-    
     def firebaseCheck_ID(self,ID):
         data = self.firebaseRead("Account")
         for __, each in data.items():

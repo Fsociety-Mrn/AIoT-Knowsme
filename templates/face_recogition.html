@@ -131,18 +131,30 @@
 
                         NoFaceIsDetected = 0;
 
+                        document.getElementById('status').style.color = 'green';
+                        document.getElementById('video').src = "";
                         setTimeout(function(){
                              location.href = "/";
-                        }, 3000); 
+                        }, 6000); 
                     }
+
+                    if (data.camera_status === 'No match detected'){
+                        document.getElementById('status').style.color = 'red';
+                        setTimeout(function(){
+                            location.href = "/";
+                        }, 5000); 
+                    }
+
 
                     setTimeout(function(){
                         NoFaceIsDetected = NoFaceIsDetected + 1;
-                        if (data.camera_status === "No Face is detected" && NoFaceIsDetected === 5){
+                        if (data.camera_status === "No Face is detected"){
                             location.href = "/";
+
+                            document.getElementById('status').style.color = 'red';
                         }
                        
-                   }, 5000); 
+                   }, 2500); 
 
  
                     
