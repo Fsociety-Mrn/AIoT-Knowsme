@@ -15,9 +15,10 @@ app = Flask(__name__)
  
 CORS(app, resources={r"/*": {"origins": ["http://127.0.0.1:1000", "http://192.168.0.101:1000"]}})
 
+global_facial_result = {}
 
 app.config["FACE_RESULT"] = "",""
-app.config["CAMERA_STATUS"] = "camera is loading",True
+app.config["CAMERA_STATUS"] = "",True
 app.config["BGR"] = 0,255,255
 app.config["training"] = False
 
@@ -46,6 +47,8 @@ ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'}
 @app.route('/face_recognition', methods=['GET'])
 def face_recognition():
     name,percent = app.config["FACE_RESULT"] 
+    print(global_facial_result)
+    name,percent = "",""
     message,status = app.config["CAMERA_STATUS"]
     return jsonify({
         "camera_status": message,
@@ -184,7 +187,7 @@ def CHECK():
 def video_feed():
 
     app.config["FACE_RESULT"] = "",""
-    app.config["CAMERA_STATUS"] = "camera is loading",True
+    app.config["CAMERA_STATUS"] = "",True
     app.config["BGR"] = 0,255,255
 
     # load a camera and face detection
@@ -195,12 +198,17 @@ def video_feed():
                         mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # Facial Recognition function
-def facialRecognition(frame):
+def facialRecognition(frame,person_id, threshold=0.7):
+    global global_facial_result
+    result = JL().Face_Compare(face=frame,threshold=threshold)
 
-    result = JL().Face_Compare(face=frame,threshold=0.7)
-
-    app.config["FACE_RESULT"] = result
-    app.config["BGR"] = (0,0,255) if result[0] == "No match detected" else (0,255,0 )
+    global_facial_result[person_id] = {
+        "name": result[0],
+        "percent": result[1],
+        "status_color": (0,0,255) if result[0] == "No match detected" else (0,255,0)
+    }
+    
+    app.config["BGR"] = (0,0,255) if result[0] == "No match detected" else (0,255,0)
     app.config["CAMERA_STATUS"] = ("Access Denied",True) if result[0] == "No match detected" else ("Access Granted",False) 
  
     # Get current date and time
@@ -265,8 +273,7 @@ def Facial_Detection(camera=None, face_detector=None):
             faceCrop = frame[y:y+h, x:x+w]
             face_gray = cv2.cvtColor(faceCrop, cv2.COLOR_BGR2GRAY)
             
-            blureness = detect_blur_in_face(face_gray=face_gray)
-            
+            is_face_blurred = detect_blur_in_face(face_gray=face_gray,Blurred=0)
             
             
             # Increment the timer by the elapsed time since the last send
@@ -278,8 +285,8 @@ def Facial_Detection(camera=None, face_detector=None):
                 app.config["BGR"] = 0,255,255
                 
                 
-                if blureness:
-                    facialRecognition(frame=frame)
+                if is_face_blurred:
+                    facialRecognition(frame=frame,person_id="person_0")
                     
                 # Reset the timer and the start time
                 timer = 0
@@ -288,9 +295,9 @@ def Facial_Detection(camera=None, face_detector=None):
             B,G,R = app.config["BGR"]          
             Name,percent = app.config["FACE_RESULT"]
             
-            if blureness:
+            if is_face_blurred:
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
-                cv2.putText(frame,Name + " " + str(percent),(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
+                # cv2.putText(frame,Name + " " + str(percent),(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
             
    
         elif len(faces) > 1:
@@ -314,16 +321,32 @@ def Facial_Detection(camera=None, face_detector=None):
                 # Crop the image with the new dimensions
                 faceCrop = frame[new_y-40:new_y+new_h+30, new_x-40:new_x+new_w+30]
                 
-                blureness = detect_blur_in_face(face_gray,f"person_{i}",1500)
+   
+                is_face_blurred = detect_blur_in_face(face_gray,f"person_{i}",0)
                 
-                if blureness:
-                    facialRecognition(frame=face_crop)
+                # Increment the timer by the elapsed time since the last send
+                timer += time.time() - start_time
+                start_time = time.time()
                 
-                    B,G,R = app.config["BGR"]          
-                    Name,percent = app.config["FACE_RESULT"]
+                
+            # Check if 3 seconds have elapsed since the last send
+                if timer >= 2:
+                    app.config["BGR"] = 0,255,255
+                
+                    if is_face_blurred:
+                        facialRecognition(person_id=f"person_{i}", frame=face_crop, threshold=0.8)
+                    
+                    # Reset the timer and the start time
+                    timer = 0
+                    start_time = time.time()
+                
+
+                
+                B,G,R = app.config["BGR"]          
+                #     Name,percent = app.config["FACE_RESULT"]
             
-                    cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
-                    cv2.putText(frame,f"person_{i}: " + Name + " " + str(percent),(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
+ 
                     
         else:
             app.config["BGR"] = 0,255,255
