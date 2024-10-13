@@ -47,8 +47,6 @@ ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'}
 @app.route('/face_recognition', methods=['GET'])
 def face_recognition():
     name,percent = app.config["FACE_RESULT"] 
-    print(global_facial_result)
-    name,percent = "",""
     message,status = app.config["CAMERA_STATUS"]
     return jsonify({
         "camera_status": message,
@@ -208,6 +206,7 @@ def facialRecognition(frame,person_id, threshold=0.7):
         "status_color": (0,0,255) if result[0] == "No match detected" else (0,255,0)
     }
     
+    print(result)
     app.config["BGR"] = (0,0,255) if result[0] == "No match detected" else (0,255,0)
     app.config["CAMERA_STATUS"] = ("Access Denied",True) if result[0] == "No match detected" else ("Access Granted",False) 
  
@@ -285,13 +284,14 @@ def Facial_Detection(camera=None, face_detector=None):
                 app.config["BGR"] = 0,255,255
                 
                 
-                if is_face_blurred:
-                    facialRecognition(frame=frame,person_id="person_0")
+                # if is_face_blurred:
+                #     facialRecognition(frame=frame,person_id="person_0")
                     
                 # Reset the timer and the start time
                 timer = 0
                 start_time = time.time()
             
+
             B,G,R = app.config["BGR"]          
             Name,percent = app.config["FACE_RESULT"]
             
@@ -303,49 +303,15 @@ def Facial_Detection(camera=None, face_detector=None):
         elif len(faces) > 1:
             
             for i,(x, y, w, h) in enumerate(faces,0):
-                
+                app.config["BGR"] = 0,255,255
                 app.config["CAMERA_STATUS"] = "Multiple person is detected",True
-                
-                face_crop = frame[y:y+h, x:x+w]
-                face_gray = cv2.cvtColor(faceCrop, cv2.COLOR_BGR2GRAY)
-            
-                # Calculate new width and height
-                scale_factor = 1.2
-                new_w = int(w * scale_factor)
-                new_h = int(h * scale_factor)
-
-                # Adjust x and y to keep the center of the face in the crop
-                new_x = max(0, x - (new_w - w) // 2)
-                new_y = max(0, y - (new_h - h) // 2)
-
-                # Crop the image with the new dimensions
-                faceCrop = frame[new_y-40:new_y+new_h+30, new_x-40:new_x+new_w+30]
-                
-   
-                is_face_blurred = detect_blur_in_face(face_gray,f"person_{i}",0)
-                
-                # Increment the timer by the elapsed time since the last send
-                timer += time.time() - start_time
-                start_time = time.time()
-                
-                
-            # Check if 3 seconds have elapsed since the last send
-                if timer >= 2:
-                    app.config["BGR"] = 0,255,255
-                
-                    if is_face_blurred:
-                        facialRecognition(person_id=f"person_{i}", frame=face_crop, threshold=0.8)
-                    
-                    # Reset the timer and the start time
-                    timer = 0
-                    start_time = time.time()
-                
-
-                
-                B,G,R = app.config["BGR"]          
-                #     Name,percent = app.config["FACE_RESULT"]
-            
+                        
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
+                
+    
+       
+                result = JL().multiple_face_compare(face=frame)
+                print(result)
  
                     
         else:
