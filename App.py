@@ -263,7 +263,7 @@ def Facial_Detection(camera=None, face_detector=None):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
         # Detect faces in the frame
-        faces = face_detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(50, 50), flags=cv2.CASCADE_SCALE_IMAGE)
+        faces = face_detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(150, 150), flags=cv2.CASCADE_SCALE_IMAGE)
 
       
         if len(faces) == 1:
@@ -343,6 +343,9 @@ def Facial_Detection(camera=None, face_detector=None):
                 
                 # if is_face_blurred:
                     facialRecognition(frame=frame, person_id=f"person_{i}",threshold=0.7)
+                    
+                    timer = 0
+                    start_time = time.time()
 
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
                 cv2.putText(frame,Name,(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
