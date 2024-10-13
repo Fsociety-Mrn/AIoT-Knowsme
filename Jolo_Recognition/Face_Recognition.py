@@ -14,7 +14,7 @@ class JoloRecognition:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
         # face detection
-        self.mtcnn  = MTCNN(image_size=160, margin=0, min_face_size=40,select_largest=True, device=self.device)
+        self.mtcnn  = MTCNN(image_size=160, margin=0, min_face_size=20,select_largest=True, device=self.device)
         
         # facial recognition
         self.facenet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
@@ -82,7 +82,8 @@ class JoloRecognition:
                         # in this if statment we set a threshold value of 0.6
                         # meaning all the result of comparing faces should atleast 0.6 value in order to recognize people
                         idx_min = match_list.index(min_dist)
-                        # print(self.Name_List[idx_min], min_dist)
+                        
+                        print(self.Name_List[idx_min], min_dist)
                     
                         percent = self.__face_distance_to_conf(face_distance=min_dist,face_match_threshold=threshold) * 100
 
@@ -116,7 +117,7 @@ class JoloRecognition:
                 
                 # Ensure at least one face is detected with 90% confidence
                 if faces is not None and len(faces) > 0:
-                    print(faces)
+                    print(faces.unsqueeze(0))
    
         
         except Exception as e:
