@@ -15,7 +15,7 @@ class Firebase:
         
     # update the current data
     def firebaseUpdate(self,keyName, name,data,time,Temp="N/A"):
-        self.db.child("History").child(keyName).push({
+        self.db.child("Test").child(keyName).push({
                                                         "name": name,
                                                         "time": time,
                                                         "data": data,
