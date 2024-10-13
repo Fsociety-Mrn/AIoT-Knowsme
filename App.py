@@ -224,10 +224,10 @@ def facialRecognition(frame):
     global last_update_time
 
     # facial reconition
-    result = JL().Face_Compare(face=frame,threshold=0.6)
+    result = JL().Face_Compare(face=frame,threshold=0.5)
     print(result)
     app.config["FACE_RESULT"] = result
-    app.config["BGR"] = (0,0,255) if result[0] == "No match detected" else (0,255,0 )
+    app.config["BGR"] = (0,0,255) if result[0] == "No match detected" else (0,255,0)
     app.config["CAMERA_STATUS"] = ("Access Denied",True) if result[0] == "No match detected" else ("Access Granted",False) 
  
     # Get current date and time

@@ -37,7 +37,7 @@ class JoloRecognition:
     
  
     # for face recognition
-    def Face_Compare(self, face, person="none", threshold=0.6):
+    def Face_Compare(self, face, person="none", threshold=0.5):
         
         try:
 
@@ -59,7 +59,7 @@ class JoloRecognition:
                     for idx, emb_db in enumerate(self.Embeding_List):
    
                         # Calculate pairwise distance using torch.fpairwise_distance
-                        dist = torch.cdist(emb, emb_db).item()
+                        dist = torch.dist(emb, emb_db).item()
 
                         # Calculate ecludian distance using torch.fpairwise_distance
                         #dist = torch.dist(emb, emb_db).item()
@@ -83,12 +83,11 @@ class JoloRecognition:
                         # print(self.Name_List[idx_min], min_dist)
                     
                         percent = self.__face_distance_to_conf(face_distance=min_dist,face_match_threshold=threshold) * 100
-
+      
                         # print(f"Threshold: {min_dist < threshold} {person} {min_dist} " )
                         if min_dist < threshold:
                         
                             idx_min = match_list.index(min_dist)
-
                             return (self.Name_List[idx_min], str('{:.2f}%'.format(percent)))
                         else:
             
