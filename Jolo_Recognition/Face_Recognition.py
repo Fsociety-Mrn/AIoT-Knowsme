@@ -50,7 +50,7 @@ class JoloRecognition:
                 # check if there is face and probability of 90%
                 if face is not None and prob > 0.95:
                     
-                    print("face detected: ", len(face))
+          
                 # calculcate the face distance
                     emb  = self.facenet(face.unsqueeze(0)).detach()
                 
@@ -116,19 +116,12 @@ class JoloRecognition:
                 
                 # Ensure at least one face is detected with 90% confidence
                 if faces is not None and len(faces) > 0:
-                    results = []
-                    
-                    for idx, (face, prob) in enumerate(zip(faces, probs)):
-
-                        print(idx)
-                        print(face, prob)
-                        
-                    return results
-                else:
-                    return [('No match detected', None)]
+                    print(faces)
+   
+        
         except Exception as e:
             print(e)
-            return [('No match detected', None)]
+
               
     # training from dataset
     def Face_Train(self, Dataset_Folder="Jolo_Recognition/Registered-Faces", location="Jolo_Recognition/Model"):

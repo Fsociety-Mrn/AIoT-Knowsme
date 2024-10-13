@@ -196,7 +196,7 @@ def video_feed():
                         mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # Facial Recognition function
-def facialRecognition(frame,person_id, threshold=0.7):
+def facialRecognition(frame,person_id, threshold=0.6):
     global global_facial_result
     result = JL().Face_Compare(face=frame,threshold=threshold)
 
@@ -298,21 +298,15 @@ def Facial_Detection(camera=None, face_detector=None):
             if is_face_blurred:
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
                 # cv2.putText(frame,Name + " " + str(percent),(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
-            
+                  
    
         elif len(faces) > 1:
-            
+
             for i,(x, y, w, h) in enumerate(faces,0):
-                app.config["BGR"] = 0,255,255
-                app.config["CAMERA_STATUS"] = "Multiple person is detected",True
-                        
-                cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
                 
-    
-       
-                result = JL().multiple_face_compare(face=frame)
-                print(result)
- 
+                JL().Face_Compare(face=frame)
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
+            
                     
         else:
             app.config["BGR"] = 0,255,255
@@ -352,3 +346,4 @@ if __name__ == '__main__':
         host='0.0.0.0',
         debug=True,
         port=2000)
+  
