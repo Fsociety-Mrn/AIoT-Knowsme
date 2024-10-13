@@ -96,7 +96,7 @@ def face_register():
         file.save(os.path.join('static/time_in', filename))
         files = cv2.imread(os.path.join('static/time_in', filename))
         gray = cv2.cvtColor(files, cv2.COLOR_BGR2GRAY)
-        faces = faceDetection.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(100, 100), flags=cv2.CASCADE_SCALE_IMAGE)
+        faces = faceDetection.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(80, 80), flags=cv2.CASCADE_SCALE_IMAGE)
         
         # Check if faces are detected 
         if len(faces) == 0:
