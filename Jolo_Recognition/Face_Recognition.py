@@ -51,12 +51,17 @@ class JoloRecognition:
                 
                 # calculcate the face distance
                     emb  = self.facenet(face.unsqueeze(0)).detach()
-                
+                    
+                    # Normalize embedding
+                    emb = emb / emb.norm()
                     match_list = []
                 
                     # self.Embeding_List is the load data.pt 
                 
                     for idx, emb_db in enumerate(self.Embeding_List):
+                        
+                        # Normalize the database embedding
+                        emb_db = emb_db / emb_db.norm()
    
                         # Calculate pairwise distance using torch.fpairwise_distance
                         dist = torch.dist(emb, emb_db).item()
@@ -74,6 +79,8 @@ class JoloRecognition:
                     
                         # match_list is the result of comparing faces
                         min_dist = min(match_list)
+                        
+                        
 
                         # since it has result we need to setup the accuracy level 
                         # threshold is the bias point number for accuracy
@@ -83,10 +90,13 @@ class JoloRecognition:
                         # print(self.Name_List[idx_min], min_dist)
                     
                         percent = self.__face_distance_to_conf(face_distance=min_dist,face_match_threshold=threshold) * 100
-      
+
+                        print(min_dist)
                         # print(f"Threshold: {min_dist < threshold} {person} {min_dist} " )
                         if min_dist < threshold:
-                        
+                            
+                           
+                            
                             idx_min = match_list.index(min_dist)
                             return (self.Name_List[idx_min], str('{:.2f}%'.format(percent)))
                         else:
@@ -124,7 +134,7 @@ class JoloRecognition:
         # load the dataset
             loader = DataLoader(
                 dataset,
-                
+                batch_size=20,
                 collate_fn=collate_fn, 
                 pin_memory=True)
 
@@ -148,7 +158,9 @@ class JoloRecognition:
                         name_list.append(label_names[label])
                         
                         cplusplus +=1
-
+                        
+            # Normalize embeddings
+            embedding_list = [emb / emb.norm() for emb in embedding_list]
             data = [embedding_list, name_list]
 
         # save the calculated face distance into data.pt
