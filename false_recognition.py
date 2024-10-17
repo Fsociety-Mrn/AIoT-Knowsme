@@ -31,22 +31,26 @@ def frame_resized(frame):
 
 def face_crop(frame,face_height,face_width):
     
-    scale_factor = 1.2
-    new_w = int(face_width * scale_factor)
-    new_h = int(face_height * scale_factor)
+    try:
+        scale_factor = 1.2
+        new_w = int(face_width * scale_factor)
+        new_h = int(face_height * scale_factor)
 
-    new_x = max(0, x - (new_w - face_width) // 2)
-    new_y = max(0, y - (new_h - face_height) // 2)
+        new_x = max(0, x - (new_w - face_width) // 2)
+        new_y = max(0, y - (new_h - face_height) // 2)
 
-    faceCrop = frame[new_y-40:new_y+new_h+30, new_x-40:new_x+new_w+30]
+        faceCrop = frame[new_y-40:new_y+new_h+30, new_x-40:new_x+new_w+30]
                     
-    return faceCrop
+        return faceCrop
+    except:
+        pass
+    return None
 
 
 def face_recognition(frame):
     global name_result,bgr_color
     
-    result = JL().Face_Compare(face=frame,threshold=0.7)
+    result = JL().Face_Compare(face=frame,threshold=0.55)
     name_result = result[0]
     bgr_color = (0,0,255) if result[0] == "No match detected" else (0,255,0)
     
@@ -58,11 +62,6 @@ while True:
 
     success, frame = cap.read()
     
-    
-    if cv2.waitKey(0) & 0xFF:  # Wait for any key to be pressed
-        paused = False
-        start_time = time.time()  
-
     if not success:
         print("Failed to grab frame")
         break
@@ -70,7 +69,6 @@ while True:
 
     frame = cv2.flip(frame_resized(frame),1)
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    
     face_detected = face_detection.detectMultiScale(frame_gray, scaleFactor=1.1, minNeighbors=20, minSize=(100, 100), flags=cv2.CASCADE_SCALE_IMAGE)
     
     timer += time.time() - start_time

@@ -91,7 +91,7 @@ class JoloRecognition:
                     
                         percent = self.__face_distance_to_conf(face_distance=min_dist,face_match_threshold=threshold) * 100
 
-                        print(min_dist)
+                     
                         # print(f"Threshold: {min_dist < threshold} {person} {min_dist} " )
                         if min_dist < threshold:
                             
