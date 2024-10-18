@@ -8,7 +8,7 @@ from Jolo_Recognition.Face_Recognition import JoloRecognition as JL
 
 
 cap = cv2.VideoCapture('multiple_face_recognition.mp4')
-cap = cv2.VideoCapture('false_recognition.mp4')
+# cap = cv2.VideoCapture('false_recognition.mp4')
 
 face_detection = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 

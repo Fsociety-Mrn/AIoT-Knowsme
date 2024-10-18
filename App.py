@@ -218,13 +218,12 @@ def video_feed():
 
 last_update_time = None
 
-# Facial Recognition function
 def facialRecognition(frame):
 
     global last_update_time
 
     # facial reconition
-    result = JL().Face_Compare(face=frame,threshold=0.5)
+    result = JL().Face_Compare(face=frame,threshold=0.55)
     print(result)
     app.config["FACE_RESULT"] = result
     app.config["BGR"] = (0,0,255) if result[0] == "No match detected" else (0,255,0)
@@ -250,7 +249,22 @@ def facialRecognition(frame):
             Temp=str(app.config["target_temp"])
         )
 
+def face_crop(frame,face_height,face_width,x,y):
+    
+    try:
+        scale_factor = 1.2
+        new_w = int(face_width * scale_factor)
+        new_h = int(face_height * scale_factor)
 
+        new_x = max(0, x - (new_w - face_width) // 2)
+        new_y = max(0, y - (new_h - face_height) // 2)
+
+        faceCrop = frame[new_y-40:new_y+new_h+30, new_x-40:new_x+new_w+30]
+                    
+        return faceCrop
+    except:
+        pass
+    return None
 
 # check face blurred level
 def detect_blur_in_face(face_gray,person=None,Blurred=1000):
@@ -290,8 +304,7 @@ def Facial_Detection(camera=None, face_detector=None):
 
       
         if len(faces) == 1:
-            
-            
+        
             (x, y, w, h) = faces[0]
             
             faceCrop = frame[y:y+h, x:x+w]
@@ -301,20 +314,21 @@ def Facial_Detection(camera=None, face_detector=None):
             # either babaan or tatanggalin lang ex:  detect_blur_in_face(face_gray=face_gray)
             # or babaan  detect_blur_in_face(face_gray=face_gray,Blurred=700)
             # ang default ay 1000
-            blureness = detect_blur_in_face(face_gray=face_gray,Blurred=0)
+            is_blurred = detect_blur_in_face(face_gray=face_gray,Blurred=0)
             
-            
-            
+        
             # Increment the timer by the elapsed time since the last send
             timer += time.time() - start_time
             start_time = time.time()
+            
+            faceCrop = face_crop(frame=frame,face_height=h,face_width=w,x=x,y=y)
 
             # Check if 3 seconds have elapsed since the last send
             if timer >= 2:
                 app.config["BGR"] = 0,255,255
                 
-                if blureness:
-                    facialRecognition(frame=frame)
+                if is_blurred and faceCrop is not None:
+                    facialRecognition(frame=faceCrop)
                     
                 # Reset the timer and the start time
                 timer = 0
@@ -323,7 +337,7 @@ def Facial_Detection(camera=None, face_detector=None):
             B,G,R = app.config["BGR"]          
             Name,percent = app.config["FACE_RESULT"]
             
-            if blureness:
+            if is_blurred:
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
                 cv2.putText(frame,Name + " " + str(percent),(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
           
@@ -335,25 +349,15 @@ def Facial_Detection(camera=None, face_detector=None):
                 app.config["CAMERA_STATUS"] = "Multiple person is detected",True
                 
                 try:
-                    face_crop = frame[y:y+h, x:x+w]
+                    faceCrop = frame[y:y+h, x:x+w]
                     face_gray = cv2.cvtColor(faceCrop, cv2.COLOR_BGR2GRAY)
 
-                    # Calculate new width and height
-                    scale_factor = 1.2
-                    new_w = int(w * scale_factor)
-                    new_h = int(h * scale_factor)
 
-                    # Adjust x and y to keep the center of the face in the crop
-                    new_x = max(0, x - (new_w - w) // 2)
-                    new_y = max(0, y - (new_h - h) // 2)
-
-                    # Crop the image with the new dimensions
-                    faceCrop = frame[new_y-40:new_y+new_h+30, new_x-40:new_x+new_w+30]
-                
-                    blureness = detect_blur_in_face(face_gray,f"person_{i}",1500)
-                
-                    if blureness:
-                        facialRecognition(frame=face_crop)
+                    is_blurred = detect_blur_in_face(face_gray,f"person_{i}",1500)
+                    faceCrop = face_crop(frame=frame,face_height=h,face_width=w,x=x,y=y)
+                    
+                    if is_blurred and faceCrop is not None:
+                        facialRecognition(frame=faceCrop)
                 
                         B,G,R = app.config["BGR"]          
                         Name,percent = app.config["FACE_RESULT"]
