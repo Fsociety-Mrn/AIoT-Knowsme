@@ -19,7 +19,10 @@ import serial
 app = Flask(__name__)
 CORS(app)
 
-API_ENDPOINT = 'http://192.168.100.38:2000'
+# NOTE:  PALITAN ANG IP ADDRESS KADA MAG PAPALIT NG WIFI/CONNECTION
+API_ENDPOINT_TIMEOUT = 'http://192.168.100.38:2000'
+BLURRINESS_VALUE = 1000
+RECOGNITION_THRESHOLD = 0.55
 
 app.config["FACE_RESULT"] = "",""
 app.config["CAMERA_STATUS"] = "camera is loading",True
@@ -56,7 +59,7 @@ def send_images():
             with open(image_path, 'rb') as image_file:
    
                 files = {'file': image_file}
-                response = requests.post(API_ENDPOINT + '/api/received-images', files=files)
+                response = requests.post(API_ENDPOINT_TIMEOUT + '/api/received-images', files=files)
 
                 message_status = "Successfully sent {filename}" if response.status_code == 200 else f"Failed to send {filename}, Status Code: {response.status_code}"
         
@@ -144,7 +147,7 @@ def facial_register_camera(camera=None, face_detector=None):
             faceCrop = frame[y:y+h, x:x+w]
             
             face_gray = cv2.cvtColor(faceCrop, cv2.COLOR_BGR2GRAY)
-            is_blurred = detect_blur_in_face(face_gray=face_gray)
+            is_blurred = detect_blur_in_face(face_gray=face_gray,Blurred=BLURRINESS_VALUE)
             
             faceCrop = face_crop(frame=frame,face_height=h,face_width=w,x=x,y=y)
             
@@ -238,7 +241,7 @@ def id_verifications():
     app.config['REGISTER_FACIAL'] = path
     
     
-    response = requests.post(f"{API_ENDPOINT}/api/id-verifications", json=request.json, headers=headers)
+    response = requests.post(f"{API_ENDPOINT_TIMEOUT}/api/id-verifications", json=request.json, headers=headers)
     
     if not response.status_code == 200:
         return response.json(), response.status_code
@@ -287,7 +290,7 @@ def facialRecognition(frame):
     global last_update_time
 
     # facial recognition
-    result = JL().Face_Compare(face=frame,threshold=0.55)
+    result = JL().Face_Compare(face=frame,threshold=RECOGNITION_THRESHOLD)
     app.config["FACE_RESULT"] = result
     app.config["BGR"] = (0,0,255) if result[0] == "No match detected" else (0,255,0)
     app.config["CAMERA_STATUS"] = ("Access Denied",True) if result[0] == "No match detected" else ("Access Granted",False) 
@@ -375,7 +378,7 @@ def Facial_Detection(camera=None, face_detector=None):
             # either babaan or tatanggalin lang ex:  detect_blur_in_face(face_gray=face_gray)
             # or babaan  detect_blur_in_face(face_gray=face_gray,Blurred=700)
             # ang default ay 1000
-            is_blurred = detect_blur_in_face(face_gray=face_gray,Blurred=0)
+            is_blurred = detect_blur_in_face(face_gray=face_gray,Blurred=BLURRINESS_VALUE)
             
         
             # Increment the timer by the elapsed time since the last send
