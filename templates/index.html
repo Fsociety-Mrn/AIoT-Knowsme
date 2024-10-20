@@ -6,7 +6,6 @@
     <title>AIoT Knows Me</title>
     <style>
 
-        /* Specify font families */
         body {
             font-family: 'Segoe UI', sans-serif;
             margin: 0;
@@ -18,83 +17,68 @@
             background-color: #f0f0f0;
             color: #333;
         }
-
-        /* Style for the entire container */
         .container-wrapper {
             display: flex;
-            flex-direction: column; /* Stack the containers vertically */
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
             padding: 10px;
-            gap: 20px; /* Spacing between containers */
+            gap: 20px;
         }
-        
-        /* Style for each row container */
         .container {
             width: 100%;
             display: flex;
-            flex-direction: column; /* Align items vertically */
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 20px;
-            background-color: #fff; /* White background */
-            border-radius: 10px; /* Rounded corners */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Shadow effect */
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
-
-        /* Additional styling for the elements inside the container */
         .container > * {
             margin: 10px 0;
         }
-
         video {
             width: 100%;
             max-width: 500px;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
- 
         h1 {
             font-size: 30px;
-            font-weight: bold; /* Make the heading bold */
+            font-weight: bold; 
         } 
-
         h6 {
             font-size: 24px;
-            font-weight: normal; /* Reset font weight */
+            font-weight: normal;
         } 
-
         p {
             font-size: 20px;
-            font-weight: normal; /* Reset font weight */
+            font-weight: normal;
         } 
-
-        /* Update button style */
         button {
             padding: 12px 20px;
             font-size: 16px;
-            border-radius: 20px; /* Rounded corners */
-            background-color: #007bff; /* Blue color */
-            color: #fff; /* White text */
+            border-radius: 20px;
+            background-color: #007bff; 
+            color: #fff; 
             border: none;
             cursor: pointer;
             transition: background-color 0.3s, color 0.3s;
         }
-
         button:hover {
-            background-color: #0056b3; /* Darker blue on hover */
+            background-color: #0056b3;
         }
         .logo {
-            max-width: 150px; /* Adjust width as needed */
+            max-width: 150px;
             height: auto;
-            margin-bottom: 20px; /* Add some space below the logo */
+            margin-bottom: 20px;
         }
-        
-        /* Center the text */
         h1#facialStatus {
-            margin-top: 20px; /* Add margin to separate from the logo */
+            margin-top: 20px;
         }
         
     </style>
@@ -102,52 +86,49 @@
 </head>
 <body>
 
-<div class="container-wrapper">
+    <div class="container-wrapper">
 
-    <!-- First row -->
-<!-- First row -->
-<div class="container">
-    <img src="../static/192.png" alt="logo" class="logo">
-    <h1 id="facialStatus">AIOT KNOWS ME AI FACIAL RECOGNITION</h1>
-</div>
+        <div class="container">
+            <img src="../static/192.png" alt="logo" class="logo">
+            <h1 id="facialStatus">AIOT KNOWS ME AI FACIAL RECOGNITION</h1>
+        </div>
 
-    <!-- Second row -->
-    <div class="container">
-        <h1 id="time">11:00 am</h1>
-        <h6 id="date">April 3 2024</h6>
-
-
-        <!-- <a href="/Time_in">
-            <button>Time Out</button>
-        </a> -->
-        
+        <div class="container">
+            <h1 id="time">11:00 am</h1>
+            <h6 id="date">April 3 2024</h6>
+        </div>
     </div>
-</div>
+
+</body>
 
 <script>
 
-    // Status for facial training
-    function get_status(){
-        fetch('/status', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(async response => {
-                    data = await response.json()
-                    
-                    console.log(data)
-                    if (data === "process"){
-                        location.href = "/facial_capture"
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
+    let intervalTime;
+    let intervalIrSensor;
+    let intervalFacialStatus;
+
+    async function getStatus(){
+         
+        const response = await fetch('/api/facial-status');
+        const data = await response.json();
+
+        if (data === "process"){
+            location.href = "/facial_capture"
+        }
+
+    }
+
+    async function getIrSensor(){
+
+        const response = await fetch('/api/serial-ir');
+        const data = await response.json();
+
+        if (parseInt(data)===1){
+            location.href = "/Time_in";
+        }
+        
     }
     
-    // Function to update time and date
     function updateTimeAndDate() {
         var currentDate = new Date();
 
@@ -172,49 +153,11 @@
         document.getElementById('date').textContent = dateString;
     }
 
-
-      // Get serial com
-      function serial_com(){
-        fetch('/serial_IR', {
-                   method: 'GET',
-                   headers: {
-                       'Content-Type': 'application/json'
-                   }
-               })
-               .then(async response => {
-                   data = await response.json()
-                   // Handle facial recognition result here
-                   console.log(parseInt(data));
-
-                   if (parseInt(data)===1){
-                       location.href = "/Time_in";
-                   }
-
-                   
-               })
-               .catch(error => {
-                   console.error('Error:', error);
-               });
-   }
-
-    // Call updateTimeAndDate function to initialize
-    updateTimeAndDate();
-    serial_com();
+    function startInterval() {
     
-    var Interval_Time;
-    var Interval_Temp;
-    var Interval_Stat;
-    var Interval_Cap;
-    var Interval_IR;
-    
-    function StartInterval() {
-    
-        // Update time and date every second
-        Interval_Time = setInterval(updateTimeAndDate, 1000);
-
-        Interval_Stat = setInterval(get_status, 500);
-
-        Interval_IR = setInterval(serial_com, 1000);
+        intervalTime = setInterval(updateTimeAndDate, 1000);
+        intervalIrSensor = setInterval(getIrSensor, 1000);
+        intervalFacialStatus = setInterval(getStatus, 500);
 
     }
     
@@ -225,8 +168,11 @@
         clearInterval(Interval_IR);
     }
     
+    updateTimeAndDate();
+    getIrSensor();
+
     window.onload = function() {
-        StartInterval();
+        startInterval();
     }
     
     window.onunload = function(){
@@ -234,5 +180,5 @@
     }
    
 </script>
-</body>
+
 </html>
