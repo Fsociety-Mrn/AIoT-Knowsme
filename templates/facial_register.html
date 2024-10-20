@@ -162,12 +162,14 @@
     async function idValidate(event){
         event.preventDefault();
 
-        const response = await fetch('/name_register', {
+        const response = await fetch('/api/id-verifications', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({'name': employeeId.value })
+            body: JSON.stringify({
+                'employee_id': employeeId.value 
+            })
         });
 
 

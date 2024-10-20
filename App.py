@@ -56,7 +56,7 @@ def send_images():
             with open(image_path, 'rb') as image_file:
    
                 files = {'file': image_file}
-                response = requests.post(API_ENDPOINT + '/face_register', files=files)
+                response = requests.post(API_ENDPOINT + '/api/received-images', files=files)
 
                 message_status = "Successfully sent {filename}" if response.status_code == 200 else f"Failed to send {filename}, Status Code: {response.status_code}"
         
@@ -119,9 +119,6 @@ def save_images(frame):
         return False
     
     return True
-      
-        
-
 
 def facial_register_camera(camera=None, face_detector=None):
 
@@ -213,15 +210,17 @@ def remove_folder():
             if os.path.isdir(folder_path):
                 shutil.rmtree(folder_path)
             
-@app.route('/name_register', methods=['POST']) 
-def name_register():
+@app.route('/api/id-verifications', methods=['POST']) 
+def id_verifications():
     
     ID = request.json
-
-    if not ID['name']:
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    if not ID['employee_id']:
         return jsonify({"message": 'enter your fullname'}), 400
     
-    result, name = Fbase().firebaseCheck_ID(ID['name'])
+    result, name = Fbase().firebaseCheck_ID(ID['employee_id'])
     if not result:
         return jsonify({"message": 'Invalid Employee ID'}), 400
 
@@ -237,6 +236,12 @@ def name_register():
 
     os.makedirs(path)
     app.config['REGISTER_FACIAL'] = path
+    
+    
+    response = requests.post(f"{API_ENDPOINT}/api/id-verifications", json=request.json, headers=headers)
+    
+    if not response.status_code == 200:
+        return response.json(), response.status_code
     
     return jsonify({"message": f"Folder {path} created successfully"}), 200
 
