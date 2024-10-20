@@ -197,10 +197,9 @@
                 })
                 .then(async response => {
                     data = await response.json()
-                    
-                    console.log(data)
-                    if (data === "process"){
-                        location.href = "/facial_capture"
+
+                    if (data === true){
+                        location.href = "/face_training"
                     }
                 })
                 .catch(error => {

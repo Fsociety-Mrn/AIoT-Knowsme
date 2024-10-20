@@ -9,25 +9,26 @@ import cv2
 import os
 import time
 import shutil
-
+import requests
 import serial
 
+
+
+# NOTE: pag i irun yung both sytem dapat http:127.0.0.1:1000 palagi irurun
 
 app = Flask(__name__)
 CORS(app)
 
-
+API_ENDPOINT = 'http://192.168.100.38:2000'
 
 app.config["FACE_RESULT"] = "",""
 app.config["CAMERA_STATUS"] = "camera is loading",True
 app.config["BGR"] = 0,255,25
 app.config["target_temp"] = "35.6"
 app.config["training"] = False
+app.config['REGISTER_FACIAL'] = 'Jolo_Recognition/Registered-Faces/'
+app.config['CAPTURE_STATUS'] = 0
 
-
-# NOTE: pag i irun yung both sytem dapat http:127.0.0.1:1000 palagi irurun
-
-# serial comunication
 @app.route('/serial_IR', methods=['GET'])
 def serial_IR():
     
@@ -45,7 +46,30 @@ def serial_IR():
     except:
         return jsonify("33,1")
 
-# face detection
+@app.route('/api/send-images', methods=['GET'])
+def send_images():
+
+    for filename in os.listdir(app.config['REGISTER_FACIAL']):
+        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+      
+            image_path = os.path.join(app.config['REGISTER_FACIAL'] , filename)
+            with open(image_path, 'rb') as image_file:
+   
+                files = {'file': image_file}
+                response = requests.post(API_ENDPOINT + '/face_register', files=files)
+
+                message_status = "Successfully sent {filename}" if response.status_code == 200 else f"Failed to send {filename}, Status Code: {response.status_code}"
+        
+                print(message_status)
+
+        
+    app.config["training"] = True
+    return jsonify({
+        "message": app.config['REGISTER_FACIAL'],
+        "result": True
+    })
+
+
 faceDetection = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
@@ -62,61 +86,116 @@ def face_recognition():
         "name": name
     }),200
      
-# Get temperature status =========================================== #
 @app.route('/status', methods=['GET'])
 def status():
     return jsonify(app.config["training"])
 
-# facial register =========================================== #
+@app.route('/api/capture-counter', methods=["GET"])
+def capture_counter():
+    
+    camera_msg,is_camera = app.config["CAMERA_STATUS"]
+    
+    return jsonify({
+                "is_camera_connected" : is_camera,
+                "capture_counter": app.config['CAPTURE_STATUS'],
+                "camera_message" : camera_msg
+            })
+    
 # validate the extentsion
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-        
-# facial register endpoint
-@app.route('/face_register', methods=['POST'])
-def face_register(): 
-    # Check if a file was uploaded
-    file = request.files.get('file')
-    
-    if not file:
-        return jsonify({'message': 'No file in request'}), 400
 
-    # Check if the file is allowed
-    if not allowed_file(file.filename):
-        return jsonify({'error': 'Invalid file type. Allowed file types are png, jpeg, jpg, gif.'}), 400
+def save_images(frame):
+    path = app.config['REGISTER_FACIAL']
     
-    # save the images if the folder of user is not 20
-    if not len(os.listdir(app.config['REGISTER_FACIAL'])) == 20:
-        
-        # Save the file
-        filename = secure_filename(file.filename)
-        
-        # Detect faces in the frame
-        file.save(os.path.join('static/time_in', filename))
-        files = cv2.imread(os.path.join('static/time_in', filename))
-        gray = cv2.cvtColor(files, cv2.COLOR_BGR2GRAY)
-        faces = faceDetection.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(100, 100), flags=cv2.CASCADE_SCALE_IMAGE)
-        
-        # Check if faces are detected 
-        if len(faces) == 0:
-            return jsonify({
-                "message":"Align your Face Properly", 
-                "result": False
-            })
+    if not len(os.listdir(path)) == 20:
         
         app.config["training"] = "process"
-        cv2.imwrite(f"{app.config['REGISTER_FACIAL']}/{int(len(os.listdir(app.config['REGISTER_FACIAL']))) + 1}.png", files)
-   
-        return jsonify({
-            "message":f"{20 - int(len(os.listdir(app.config['REGISTER_FACIAL'])))} left capture images", 
-            "result": False
-            })
+        capture =  int(len(os.listdir(path))) + 1
+        app.config['CAPTURE_STATUS'] = capture
+        cv2.imwrite(f"{path}/{capture}.png", frame)
         
+        return False
     
-    app.config["training"] = True
-    return jsonify({"message":"File saved successfully","result": True})
+    return True
+      
+        
 
+
+def facial_register_camera(camera=None, face_detector=None):
+
+    timer = 0
+    start_time = time.time()
+    while True:
+
+        ret, frame = camera.read()
+        
+        if not ret:
+            app.config["CAMERA_STATUS"] = "camera is not detected",True
+            break
+        
+        frame = cv2.flip(frame,1)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        faces = face_detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(150, 150), flags=cv2.CASCADE_SCALE_IMAGE)
+
+        if len(faces) == 1:
+        
+            (x, y, w, h) = faces[0]
+            
+            faceCrop = frame[y:y+h, x:x+w]
+            
+            face_gray = cv2.cvtColor(faceCrop, cv2.COLOR_BGR2GRAY)
+            is_blurred = detect_blur_in_face(face_gray=face_gray)
+            
+            faceCrop = face_crop(frame=frame,face_height=h,face_width=w,x=x,y=y)
+            
+             # Increment the timer by the elapsed time since the last send
+            timer += time.time() - start_time
+            start_time = time.time()
+            
+            
+            if is_blurred:
+                
+                if timer >= 0.3:
+                    is_capture_done= save_images(faceCrop)
+                
+                    if is_capture_done:
+                        app.config["training"] = "sending"
+                        break
+                    
+                    # Reset the timer and the start time
+                    timer = 0
+                    start_time = time.time()
+                    
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 255), 2)
+                
+                
+            
+            app.config["CAMERA_STATUS"] = ("Please align your face properly.",False) if is_blurred else ("Oops! Your camera's not in focus. Try moving it or wiping the lens",False)
+            
+   
+        elif len(faces) > 1:
+            
+            app.config["CAMERA_STATUS"] = "Multiple person is detected",False
+
+        _, frame_encoded  = cv2.imencode('.png', frame)
+        yield (b'--frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + frame_encoded.tobytes() + b'\r\n')
+
+@app.route('/face_register')
+def face_register(): 
+    app.config["FACE_RESULT"] = "",""
+    app.config["CAMERA_STATUS"] = "",True
+    app.config["BGR"] = 0,255,255
+
+    # load a camera and face detection
+    camera = cv2.VideoCapture(0)  # Set height to 1080p
+    face_detection = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+    return Response(facial_register_camera(camera=camera, face_detector=face_detection), 
+                        mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def remove_folder():
     location = "Jolo_Recognition/Registered-Faces"
@@ -133,20 +212,12 @@ def remove_folder():
             folder_path = os.path.join(location, folder_name)  # Replace "Your_Folder_Path_Here" with the actual path
             if os.path.isdir(folder_path):
                 shutil.rmtree(folder_path)
-                print(f"Folder '{folder_name}' removed.")
-            else:
-                print(f"Path '{folder_path}' is not a directory.")
-        else:
-            print(f"Folder '{folder_name}' exists in data, skipping removal.")
             
-# name register 
 @app.route('/name_register', methods=['POST']) 
 def name_register():
     
-    # Get the first and last name from the request body
     ID = request.json
-    
-    # Check that both first and last name are provided
+
     if not ID['name']:
         return jsonify({"message": 'enter your fullname'}), 400
     
@@ -156,25 +227,20 @@ def name_register():
 
     remove_folder()
 
-    # Define the name of the folder you want to create
     folder_name = f"{str(name).capitalize()}"
 
-    # Define the path to the folder you want to create
     path = f"Jolo_Recognition/Registered-Faces/{folder_name}"
 
-    # Check if the folder already exists
     if os.path.exists(path):
 
-        # Remove all contents of the folder
         shutil.rmtree(path)
 
     os.makedirs(path)
     app.config['REGISTER_FACIAL'] = path
     
-    # Return a success message
     return jsonify({"message": f"Folder {path} created successfully"}), 200
 
-@app.route('/facial_training', methods=['GET'])
+@app.route('/api/facial-training', methods=['GET'])
 def facial_training():
 
     remove_folder()
@@ -183,23 +249,16 @@ def facial_training():
     app.config["training"] = False
     return jsonify(result),200
 
-# Get temperature status =========================================== #
 @app.route('/Temperature', methods=['GET'])
 def Temperature():
     try:
-   
- 
         return jsonify(app.config["target_temp"]),200
     except Exception as E:
         pass
         app.config["target_temp"] = 0.0
-        print(E)
+
         return jsonify("N/A"),200
     
-# Get temperature status =========================================== #
-@app.route('/check', methods=['GET'])
-def CHECK():
-    return jsonify("hello friend"),200
 
 # Facial Detection =========================================== #
 @app.route('/video_feed')
@@ -222,9 +281,8 @@ def facialRecognition(frame):
 
     global last_update_time
 
-    # facial reconition
+    # facial recognition
     result = JL().Face_Compare(face=frame,threshold=0.55)
-    print(result)
     app.config["FACE_RESULT"] = result
     app.config["BGR"] = (0,0,255) if result[0] == "No match detected" else (0,255,0)
     app.config["CAMERA_STATUS"] = ("Access Denied",True) if result[0] == "No match detected" else ("Access Granted",False) 
@@ -257,7 +315,7 @@ def face_crop(frame,face_height,face_width,x,y):
         new_h = int(face_height * scale_factor)
 
         new_x = max(0, x - (new_w - face_width) // 2)
-        new_y = max(0, y - (new_h - face_height) // 2)
+        new_y = max(0, y - (new_h - face_height) // 2) - 15
 
         faceCrop = frame[new_y-40:new_y+new_h+30, new_x-40:new_x+new_w+30]
                     
@@ -276,9 +334,7 @@ def detect_blur_in_face(face_gray,person=None,Blurred=1000):
     variance = laplacian.var()
         
     Face_blured = float("{:.2f}".format(variance)) 
-    
-    print(person,Face_blured)
-    
+        
     return True if Face_blured > Blurred else False
     
 def Facial_Detection(camera=None, face_detector=None):
@@ -323,7 +379,7 @@ def Facial_Detection(camera=None, face_detector=None):
             
             faceCrop = face_crop(frame=frame,face_height=h,face_width=w,x=x,y=y)
 
-            # Check if 3 seconds have elapsed since the last send
+            # Check if 3 seconds have elapsed since the last 
             if timer >= 2:
                 app.config["BGR"] = 0,255,255
                 
@@ -379,27 +435,27 @@ def Facial_Detection(camera=None, face_detector=None):
         yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + frame_encoded.tobytes() + b'\r\n')
 
-# homepage =========================================== #
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# facial register =========================================== #
+
 @app.route('/facial_register')
 def facial_register():
     return render_template('facial_register.html')
 
-# facial training =========================================== #
+
 @app.route('/face_training')
 def face_training():
     return render_template('face_training.html')
 
-# facial capture =========================================== #
+
 @app.route('/facial_capture')
 def facial_capture():
     return render_template('facial_capture.html')
 
-# facial capture =========================================== #
+
 @app.route('/Time_in')
 def facial_recognition():
     return render_template('face_recogition.html')
