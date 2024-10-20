@@ -15,7 +15,11 @@ import serial
 
 app = Flask(__name__)
  
-CORS(app, resources={r"/*": {"origins": ["http://127.0.0.1:1000", "http://192.168.0.101:1000"]}})
+API_ENDPOINT_TIME_IN = "http://192.168.0.101:1000"
+RECOGNITION_THRESHOLD = 0.55
+BLURRINESS_VALUE = 1000
+ 
+CORS(app, resources={r"/*": {"origins": ["http://127.0.0.1:1000", API_ENDPOINT_TIME_IN]}})
 
 
 app.config["FACE_RESULT"] = "",""
@@ -176,7 +180,7 @@ def face_crop(frame,face_height,face_width,x,y):
         new_h = int(face_height * scale_factor)
 
         new_x = max(0, x - (new_w - face_width) // 2)
-        new_y = max(0, y - (new_h - face_height) // 2)
+        new_y = max(0, y - (new_h - face_height) // 2) - 15
 
         faceCrop = frame[new_y-40:new_y+new_h+30, new_x-40:new_x+new_w+30]
                     
@@ -188,10 +192,10 @@ def face_crop(frame,face_height,face_width,x,y):
 
 def facialRecognition(frame):
 
-    result = JL().Face_Compare(face=frame,threshold=0.55)
+    result = JL().Face_Compare(face=frame,threshold=RECOGNITION_THRESHOLD)
 
     app.config["FACE_RESULT"] = result
-    app.config["BGR"] = (0,0,255) if result[0] == "No match detected" else (0,255,0 )
+    app.config["BGR"] = (0,0,255) if result[0] == "No match detected" else (0,255,0)
     app.config["CAMERA_STATUS"] = ("Access Denied",True) if result[0] == "No match detected" else ("Access Granted",False) 
  
     # Get current date and time
@@ -255,7 +259,7 @@ def Facial_Detection(camera=None, face_detector=None):
             faceCrop = frame[y:y+h, x:x+w]
             face_gray = cv2.cvtColor(faceCrop, cv2.COLOR_BGR2GRAY)
             
-            is_blurred = detect_blur_in_face(face_gray=face_gray)
+            is_blurred = detect_blur_in_face(face_gray=face_gray,Blurred=BLURRINESS_VALUE)
             
             # Increment the timer by the elapsed time since the last send
             timer += time.time() - start_time
@@ -293,7 +297,7 @@ def Facial_Detection(camera=None, face_detector=None):
                     face_gray = cv2.cvtColor(faceCrop, cv2.COLOR_BGR2GRAY)
 
 
-                    is_blurred = detect_blur_in_face(face_gray,f"person_{i}",1500)
+                    is_blurred = detect_blur_in_face(face_gray,f"person_{i}",BLURRINESS_VALUE)
                     faceCrop = face_crop(frame=frame,face_height=h,face_width=w,x=x,y=y)
                     
                     if is_blurred and faceCrop is not None:
