@@ -139,7 +139,7 @@ def id_verifications():
     app.config["training"] = "process"
     return jsonify({"message": f"Folder {path} created successfully"}), 200
 
-@app.route('/facial_training', methods=['GET'])
+@app.route('/api/facial-training', methods=['GET'])
 def facial_training():
 
     remove_folder()
