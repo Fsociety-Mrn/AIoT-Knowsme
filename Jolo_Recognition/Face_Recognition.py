@@ -134,7 +134,7 @@ class JoloRecognition:
         # load the dataset
             loader = DataLoader(
                 dataset,
-                batch_size=1,
+                batch_size=20,
                 collate_fn=collate_fn, 
                 pin_memory=True)
 

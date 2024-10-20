@@ -1,14 +1,16 @@
+
+from Firebase.firebase import Firebase as Fbase
+from Jolo_Recognition.Face_Recognition import JoloRecognition as JL
+
+from flask_cors import CORS
 from flask import Flask, render_template, Response,request,jsonify
 from datetime import datetime
-from Firebase.firebase import Firebase as Fbase
-from flask_cors import CORS
-from werkzeug.utils import secure_filename
-from Jolo_Recognition.Face_Recognition import JoloRecognition as JL
+
 import cv2
 import os
 import time
 import shutil
-
+import numpy as np
 import serial
 
 app = Flask(__name__)
@@ -22,9 +24,8 @@ app.config["BGR"] = 0,255,255
 app.config["training"] = False
 
 
-# serial comunication
-@app.route('/serial_IR', methods=['GET'])
-def serial_IR():
+@app.route('/api/serial-ir', methods=['GET'])
+def serial_ir():
     
     try:
         # Define the serial port and baud rate
@@ -38,7 +39,7 @@ def serial_IR():
     except:
         return jsonify(0)
 
-# face detection
+
 faceDetection = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
@@ -53,62 +54,43 @@ def face_recognition():
         "percent": percent,
         "name": name
     }),200
-     
-# Get temperature status =========================================== #
-@app.route('/status', methods=['GET'])
+
+@app.route('/api/facial-status', methods=['GET'])
 def status():
     return jsonify(app.config["training"])
 
-# facial register =========================================== #
-# validate the extentsion
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-        
-# facial register endpoint
-@app.route('/face_register', methods=['POST'])
-def face_register(): 
-    # Check if a file was uploaded
+
+@app.route('/api/received-images', methods=['POST'])
+def received_images(): 
+    
+    filepath = app.config['REGISTER_FACIAL']
+    filename = f'{len(os.listdir(filepath)) + 1}.png'
     file = request.files.get('file')
-    
+
     if not file:
-        return jsonify({'message': 'No file in request'}), 400
-
-    # Check if the file is allowed
-    if not allowed_file(file.filename):
-        return jsonify({'error': 'Invalid file type. Allowed file types are png, jpeg, jpg, gif.'}), 400
-    
-    # save the images if the folder of user is not 20
-    if not len(os.listdir(app.config['REGISTER_FACIAL'])) == 20:
-        
-        # Save the file
-        filename = secure_filename(file.filename)
-        
-        # Detect faces in the frame
-        file.save(os.path.join('static/time_in', filename))
-        files = cv2.imread(os.path.join('static/time_in', filename))
-        gray = cv2.cvtColor(files, cv2.COLOR_BGR2GRAY)
-        faces = faceDetection.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(100, 100), flags=cv2.CASCADE_SCALE_IMAGE)
-        
-        # Check if faces are detected 
-        if len(faces) == 0:
-            return jsonify({
-                "message":"Align your Face Properly", 
-                "result": False
-            })
-        
-        app.config["training"] = "process"
-        cv2.imwrite(f"{app.config['REGISTER_FACIAL']}/{int(len(os.listdir(app.config['REGISTER_FACIAL']))) + 1}.png", files)
-   
         return jsonify({
-            "message":f"{20 - int(len(os.listdir(app.config['REGISTER_FACIAL'])))} left capture images", 
-            "result": False
-            })
-        
-    
-    app.config["training"] = True
-    return jsonify({"message":"File saved successfully","result": True})
+            'message': 'No file in request'
+        }), 400
 
+
+    if not allowed_file(file.filename):
+        return jsonify({
+            'message': 'Invalid file type. Allowed file types are png, jpeg, jpg, gif.'
+        }), 400
+    
+    npImage = np.frombuffer(file.read(), np.uint8)
+    image = cv2.imdecode(npImage, cv2.IMREAD_COLOR)
+
+    cv2.imwrite(f"{filepath}/{filename}", image)
+    
+    app.config["training"] = True if len(os.listdir(filepath)) == 20 else False
+    return jsonify({
+        'message': f'file successfully save: {filepath}/{filename}'
+    })
+        
 
 def remove_folder():
     location = "Jolo_Recognition/Registered-Faces"
@@ -130,39 +112,31 @@ def remove_folder():
                 print(f"Path '{folder_path}' is not a directory.")
         else:
             print(f"Folder '{folder_name}' exists in data, skipping removal.")
-            
-# name register 
-@app.route('/name_register', methods=['POST']) 
-def name_register():
+
+@app.route('/api/id-verifications', methods=['POST']) 
+def id_verifications():
     
-    # Get the first and last name from the request body
     ID = request.json
     
-    # Check that both first and last name are provided
-    if not ID['name']:
+    if not ID['employee_id']:
         return jsonify({"message": 'enter your Employee ID'}), 400
     
-    result, name = Fbase().firebaseCheck_ID(ID['name'])
+    result, name = Fbase().firebaseCheck_ID(ID['employee_id'])
     if not result:
         return jsonify({"message": 'Invalid Employee ID'}), 400
 
     remove_folder()
 
-    # Define the name of the folder you want to create
     folder_name = f"{str(name).capitalize()}"
 
-    # Define the path to the folder you want to create
     path = f"Jolo_Recognition/Registered-Faces/{folder_name}"
 
-    # Check if the folder already exists
     if os.path.exists(path):
-        # Remove all contents of the folder
         shutil.rmtree(path)
 
     os.makedirs(path)
     app.config['REGISTER_FACIAL'] = path
-    
-    # Return a success message
+    app.config["training"] = "process"
     return jsonify({"message": f"Folder {path} created successfully"}), 200
 
 @app.route('/facial_training', methods=['GET'])

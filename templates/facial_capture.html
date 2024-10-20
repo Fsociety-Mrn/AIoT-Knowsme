@@ -59,43 +59,37 @@
 
 </head>
 <body>
-<div class="loading-screen">
-    <div class="loading-text">
-        <p>Facial Capture in progress</p>
+
+    <div class="loading-screen">
+
+        <div class="loading-text">
+            <p>Facial Capture in progress</p>
+        </div>
+
+        <div class="loading-bar-container">
+            <div class="loading-bar"></div>
+        </div>
+        
     </div>
-    <div class="loading-bar-container">
-        <div class="loading-bar"></div>
-    </div>
-</div>
+
+</body>
+
 
 <script>
 
-      // Status for facial training
-    async function get_status(){
-        await fetch('/status', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(async response => {
-                    data = await response.json()
-                    
-                    console.log(data)
-                    if (data === true){
-                        location.href = "/face_training"
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-    }
+    async function getStatus(){
+        const response = await fetch('/api/facial-status');
+        const data = await response.json();
 
-    // run facial recognition every second
-    setInterval(async function(){
-        await get_status();
-    }, 1000);
+        if (data === true){
+            location.href = "/face_training"
+        }
+  }
+
+  setInterval(async function(){
+      await getStatus();
+  }, 1000);
 
 </script>
-</body>
+
 </html>
