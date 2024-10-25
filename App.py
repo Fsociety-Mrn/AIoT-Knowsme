@@ -153,6 +153,11 @@ def facial_register_camera(camera=None, face_detector=None):
 
     timer = 0
     start_time = time.time()
+    
+    direction = 1  # 1 for down, -1 for up
+    speed = 2  # Speed of the line movement
+    line_y = None  # Line's vertical position
+    
     while True:
 
         ret, frame = camera.read()
@@ -177,14 +182,13 @@ def facial_register_camera(camera=None, face_detector=None):
             
             faceCrop = face_crop(frame=frame,face_height=h,face_width=w,x=x,y=y)
             
-             # Increment the timer by the elapsed time since the last send
+
             timer += time.time() - start_time
             start_time = time.time()
-            
-            
+                    
             if is_blurred:
                 
-                if timer >= 0.3:
+                if timer >= 0.5:
                     is_capture_done= save_images(faceCrop)
                 
                     if is_capture_done:
@@ -194,11 +198,19 @@ def facial_register_camera(camera=None, face_detector=None):
                     # Reset the timer and the start time
                     timer = 0
                     start_time = time.time()
-                    
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 255), 2)
+
+                if line_y is None:
+                    line_y = y + (h // 2)
                 
+                draw_custom_face_box(frame, x, y, w, h, line_y,scanColor=(0,255,255),scan=True)
+
+                line_y += speed * direction
+
+                if line_y >= y + h:
+                    direction = -1
+                elif line_y <= y:
+                    direction = 1
                 
-            
             app.config["CAMERA_STATUS"] = ("Please align your face properly.",False) if is_blurred else ("Oops! Your camera's not in focus. Try moving it or wiping the lens",False)
             
    
@@ -469,7 +481,6 @@ def Facial_Detection(camera=None, face_detector=None):
                 start_time = time.time()
             
             B,G,R = app.config["BGR"]          
-            Name,percent = app.config["FACE_RESULT"]
             
             if is_blurred:
                 draw_custom_face_box(frame, x, y, w, h,box_color=(B,G,R))
