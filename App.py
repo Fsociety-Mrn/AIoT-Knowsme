@@ -22,7 +22,7 @@ CORS(app)
 # NOTE:  PALITAN ANG IP ADDRESS KADA MAG PAPALIT NG WIFI/CONNECTION
 API_ENDPOINT_TIMEOUT = 'http://192.168.100.38:2000'
 BLURRINESS_VALUE = 0
-RECOGNITION_THRESHOLD = 0.9
+RECOGNITION_THRESHOLD = 0.55
 
 app.config["FACE_RESULT"] = "",""
 app.config["CAMERA_STATUS"] = "camera is loading",True
@@ -322,7 +322,7 @@ def recognize_multiple_faces(frame,face_detected,is_blurred):
     # Format time as "Hour:Minute AM/PM" (e.g., "1:52 PM")
     formatted_time = current_datetime.strftime("%I:%M %p")
     
-    Name,percent = "",""
+    Name,percent = "| ",""
     for id,(x, y, w, h) in enumerate(face_detected,0):
         
         faceCrop = frame[y:y+h, x:x+w]
@@ -336,7 +336,7 @@ def recognize_multiple_faces(frame,face_detected,is_blurred):
 
             name_result = result[0]
 
-            Name += name_result + " , "
+            Name += name_result + " | " if result[0] == "No match detected" else ""
             percent = result[1]
             
             app.config["BGR"] = (0,0,255) if result[0] == "No match detected" else (0,255,0)
@@ -461,8 +461,8 @@ def Facial_Detection(camera=None, face_detector=None):
             if timer >= 2:
                 app.config["BGR"] = 0,255,255
                 
-                # if is_blurred and faceCrop is not None:
-                #     facialRecognition(frame=faceCrop)
+                if is_blurred and faceCrop is not None:
+                    facialRecognition(frame=faceCrop)
                     
                 # Reset the timer and the start time
                 timer = 0
@@ -484,23 +484,23 @@ def Facial_Detection(camera=None, face_detector=None):
             
             for i,(x, y, w, h) in enumerate(faces,0):
                 
-                # app.config["CAMERA_STATUS"] = "Multiple person is detected",F
-                
                 try:
                     faceCrop = frame[y:y+h, x:x+w]
                     face_gray = cv2.cvtColor(faceCrop, cv2.COLOR_BGR2GRAY)
 
                     is_blurred = detect_blur_in_face(face_gray,f"person_{i}",1500)
         
-                    if timer >= 0.5:
+                    if timer >= 1:
                         
                         if is_blurred and faceCrop is not None:
                             recognize_multiple_faces(frame,faces,is_blurred)
      
                     if is_blurred:
+                        B,G,R = app.config["BGR"] 
                         draw_custom_face_box(frame, x, y, w, h,box_color=(B,G,R))
                 
-                except:
+                except Exception as e:
+                    print(e)
                     pass   
 
            

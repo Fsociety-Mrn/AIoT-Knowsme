@@ -243,16 +243,21 @@
         const cameraStatus = getCleanCameraStatus(data.camera_status);
         const nameResult = getCleanCameraStatus(data.name);
 
-        if (data.camera_status === 'Access Granted') {
-            showAccessGranted(data);
-        } else if (nameResult === "nomatchdetected") {
-            showNoMatchDetected(data);
-            console.log("No match is detected");
+        switch(cameraStatus){
 
-        } else if (cameraStatus === "nofaceisdetected") {
-            showNoFaceDetected();
-            console.log("No face is detected");
+            case 'accessgranted':
+                showAccessGranted(data);
+            break;
+
+            case 'accessdenied':
+                showNoMatchDetected(data);
+            break;
+
+            case 'nofaceisdetected':
+                showNoFaceDetected(data);
+            break;
         }
+
 
         setInterval(function (){
             if (globalNoFaceIsDetected >= 6 || globalFailedRecognition >= 10 ) {
