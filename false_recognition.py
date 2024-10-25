@@ -12,6 +12,7 @@ cap = cv2.VideoCapture('multiple_face_recognition.mp4')
 
 face_detection = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
+colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (0, 255, 255)]
 
 timer = 0
 start_time = time.time()
@@ -50,13 +51,28 @@ def face_crop(frame,face_height,face_width):
 def face_recognition(frame):
     global name_result,bgr_color
     
-    result = JL().Face_Compare(face=frame,threshold=0.55)
+    result = JL().Face_Compare(face=frame,threshold=0.6)
     name_result = result[0]
-    bgr_color = (0,0,255) if result[0] == "No match detected" else (0,255,0)
+    bgr_color = (0,0,255) if result[0] == "No match detected" else (0,255,255) 
+
+def recognize_multiple_faces(frame):
+    global name_result
     
-    print(name_result,bgr_color)
+    for id,(x, y, w, h) in enumerate(face_detected,0):
+        
+        faceCrop = face_crop(frame=frame,face_height=h,face_width=w)
+        
+        if faceCrop is not None:
 
+            # result = JL().Face_Compare(face=frame,threshold=0.7)
 
+            # name_result = result[0]
+            # color = (0,0,255) if result[0] == "No match detected" else (0,255,0) 
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (0,255,0), 2)
+            # cv2.putText(frame,name_result,(x, y-10),cv2.FONT_HERSHEY_COMPLEX,1,(color),1)
+            
+            # print(f"person_{id}: {result[0]}")
+         
 
 while True:
 
@@ -75,14 +91,15 @@ while True:
     start_time = time.time()
     
     for face_id,(x, y, w, h) in enumerate(face_detected,0):
-        
-        if timer >= 0.5:
-            face_recognition(frame=face_crop(frame=frame,face_height=h,face_width=w))
-            timer = 0
-            start_time = time.time()
+        color = colors[face_id % len(colors)]
+        cv2.rectangle(frame, (x, y), (x+w, y+h), (color), 2)
+        # if timer >= 0.5:
             
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (bgr_color), 2)
-        cv2.putText(frame,name_result,(x, y-10),cv2.FONT_HERSHEY_COMPLEX,1,(bgr_color),1)
+        #     recognize_multiple_faces(frame=frame)
+        #     timer = 0
+        #     start_time = time.time()
+                        
+
 
     cv2.imshow('Video Stream', frame)
 
