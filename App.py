@@ -325,6 +325,8 @@ last_update_time = None
 
 def recognize_multiple_faces(frame,face_detected,is_blurred):
     
+    camera_status = "Access Denied", False
+    
     # Get current date and time
     current_datetime = datetime.now()
 
@@ -348,14 +350,13 @@ def recognize_multiple_faces(frame,face_detected,is_blurred):
 
             name_result = result[0]
 
-            Name += name_result + " | " if result[0] == "No match detected" else ""
+            Name += name_result + " | " if name_result != "No match detected" else ""
             percent = result[1]
             
-            app.config["BGR"] = (0,0,255) if result[0] == "No match detected" else (0,255,0)
-            app.config["CAMERA_STATUS"] = ("Access Denied",True) if result[0] == "No match detected" else ("Access Granted",False) 
-            
+            app.config["BGR"] = (0,0,255) if name_result == "No match detected" else (0,255,0)
+   
             if name_result != "No match detected":
-        
+                camera_status = ("Access Granted",False)
                 Fbase().firebaseUpdate(
                     keyName=formatted_date,
                     name=result[0],
@@ -363,8 +364,8 @@ def recognize_multiple_faces(frame,face_detected,is_blurred):
                     time=formatted_time,
                     Temp=str(app.config["target_temp"])
                 )
-        
-    return (Name,percent) 
+    facial_status = (Name,percent)
+    return (facial_status,camera_status) 
  
 
 def facialRecognition(frame):
@@ -447,7 +448,7 @@ def Facial_Detection(camera=None, face_detector=None):
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
         # Detect faces in the frame
-        faces = face_detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(100, 100), flags=cv2.CASCADE_SCALE_IMAGE)
+        faces = face_detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(150, 150), flags=cv2.CASCADE_SCALE_IMAGE)
 
       
         if len(faces) == 1:
@@ -457,10 +458,6 @@ def Facial_Detection(camera=None, face_detector=None):
             faceCrop = frame[y:y+h, x:x+w]
             face_gray = cv2.cvtColor(faceCrop, cv2.COLOR_BGR2GRAY)
             
-            # Blurred Paramater = addjust nyo lang pag di marecognize yung prof 
-            # either babaan or tatanggalin lang ex:  detect_blur_in_face(face_gray=face_gray)
-            # or babaan  detect_blur_in_face(face_gray=face_gray,Blurred=700)
-            # ang default ay 1000
             is_blurred = detect_blur_in_face(face_gray=face_gray,Blurred=BLURRINESS_VALUE)
             
         
@@ -470,14 +467,13 @@ def Facial_Detection(camera=None, face_detector=None):
             
             faceCrop = face_crop(frame=frame,face_height=h,face_width=w,x=x,y=y)
 
-            # Check if 3 seconds have elapsed since the last 
             if timer >= 2:
                 app.config["BGR"] = 0,255,255
                 
                 if is_blurred and faceCrop is not None:
                     facialRecognition(frame=faceCrop)
                     
-                # Reset the timer and the start time
+
                 timer = 0
                 start_time = time.time()
             
@@ -502,16 +498,18 @@ def Facial_Detection(camera=None, face_detector=None):
 
                     is_blurred = detect_blur_in_face(face_gray,f"person_{i}",1500)
         
-                    if timer >= 2:
+                    if timer >= 3:
                         
                         if is_blurred and faceCrop is not None:
-                            face_result = recognize_multiple_faces(frame,faces,is_blurred)
+                            face_result,camera_status = recognize_multiple_faces(frame,faces,is_blurred)
      
                     if is_blurred:
                         B,G,R = app.config["BGR"] 
                         draw_custom_face_box(frame, x, y, w, h,box_color=(B,G,R))
                         
                         app.config["FACE_RESULT"] = face_result
+                        app.config["CAMERA_STATUS"] = camera_status
+
                 
                 except Exception as e:
                     print(e)
