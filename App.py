@@ -81,7 +81,7 @@ ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'}
 def face_recognition():
     name,percent = app.config["FACE_RESULT"] 
     message,status = app.config["CAMERA_STATUS"]
-  
+    
     return jsonify({
         "camera_status": message,
         "status": status,
@@ -364,7 +364,7 @@ def recognize_multiple_faces(frame,face_detected,is_blurred):
                     Temp=str(app.config["target_temp"])
                 )
         
-    app.config["FACE_RESULT"] = Name,percent
+    return (Name,percent) 
  
 
 def facialRecognition(frame):
@@ -432,6 +432,7 @@ def Facial_Detection(camera=None, face_detector=None):
     # Initialize the timer and the start time
     timer = 0
     start_time = time.time()
+    face_result = "",""
     
     while True:
         
@@ -501,14 +502,16 @@ def Facial_Detection(camera=None, face_detector=None):
 
                     is_blurred = detect_blur_in_face(face_gray,f"person_{i}",1500)
         
-                    if timer >= 1:
+                    if timer >= 2:
                         
                         if is_blurred and faceCrop is not None:
-                            recognize_multiple_faces(frame,faces,is_blurred)
+                            face_result = recognize_multiple_faces(frame,faces,is_blurred)
      
                     if is_blurred:
                         B,G,R = app.config["BGR"] 
                         draw_custom_face_box(frame, x, y, w, h,box_color=(B,G,R))
+                        
+                        app.config["FACE_RESULT"] = face_result
                 
                 except Exception as e:
                     print(e)
