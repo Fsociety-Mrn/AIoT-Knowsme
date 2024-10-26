@@ -17,7 +17,7 @@ app = Flask(__name__)
  
 API_ENDPOINT_TIME_IN = "http://192.168.0.101:1000"
 RECOGNITION_THRESHOLD = 0.55
-BLURRINESS_VALUE = 1000
+BLURRINESS_VALUE = 0
  
 CORS(app, resources={r"/*": {"origins": ["http://127.0.0.1:1000", API_ENDPOINT_TIME_IN]}})
 
@@ -162,7 +162,7 @@ def CHECK():
 def video_feed():
 
     app.config["FACE_RESULT"] = "",""
-    app.config["CAMERA_STATUS"] = "camera is loading",True
+    app.config["CAMERA_STATUS"] = "",True
     app.config["BGR"] = 0,255,255
 
     # load a camera and face detection
@@ -188,6 +188,77 @@ def face_crop(frame,face_height,face_width,x,y):
     except:
         pass
     return None
+
+def draw_custom_face_box(frame, x, y_face, w, h, line_y = None, box_color = (255, 255, 255), scan = False, scanColor=(255, 215, 0)):
+    """Draws a face box with blue corners and a moving horizontal line."""
+
+    line_thickness = 2
+    corner_length = 30  # Length of the corner lines
+     # Light blue corner color
+
+    # Top-left corner
+    cv2.line(frame, (x, y_face), (x + corner_length, y_face), box_color, line_thickness)
+    cv2.line(frame, (x, y_face), (x, y_face + corner_length), box_color, line_thickness)
+
+    # Top-right corner
+    cv2.line(frame, (x + w, y_face), (x + w - corner_length, y_face), box_color, line_thickness)
+    cv2.line(frame, (x + w, y_face), (x + w, y_face + corner_length), box_color, line_thickness)
+
+    # Bottom-left corner
+    cv2.line(frame, (x, y_face + h), (x + corner_length, y_face + h), box_color, line_thickness)
+    cv2.line(frame, (x, y_face + h), (x, y_face + h - corner_length), box_color, line_thickness)
+
+    # Bottom-right corner
+    cv2.line(frame, (x + w, y_face + h), (x + w - corner_length, y_face + h), box_color, line_thickness)
+    cv2.line(frame, (x + w, y_face + h), (x + w, y_face + h - corner_length), box_color, line_thickness)
+
+    if scan:
+        cv2.line(frame, (x, line_y), (x + w, line_y), scanColor, 2)  # Yellow moving line
+
+def recognize_multiple_faces(frame,face_detected,is_blurred):
+    
+    camera_status = "Access Denied", False
+    
+    # Get current date and time
+    current_datetime = datetime.now()
+
+    # Format date as "Month Day Year" (e.g., "April 03 2024")
+    formatted_date = current_datetime.strftime("%B %d %Y")
+
+    # Format time as "Hour:Minute AM/PM" (e.g., "1:52 PM")
+    formatted_time = current_datetime.strftime("%I:%M %p")
+    
+    Name,percent = "| ",""
+    for id,(x, y, w, h) in enumerate(face_detected,0):
+        
+        faceCrop = frame[y:y+h, x:x+w]
+        face_gray = cv2.cvtColor(faceCrop, cv2.COLOR_BGR2GRAY)
+        
+        is_blurred = detect_blur_in_face(face_gray,f"person_{id}",BLURRINESS_VALUE)
+        faceCrop = face_crop(frame=frame,face_height=h,face_width=w,x=x,y=y)
+        
+        if is_blurred and faceCrop is not None:
+            result = JL().Face_Compare(face=faceCrop,threshold=RECOGNITION_THRESHOLD)
+
+            name_result = result[0]
+
+            Name += name_result + " | " if name_result != "No match detected" else ""
+            percent = result[1]
+            
+            app.config["BGR"] = (0,0,255) if name_result == "No match detected" else (0,255,0)
+   
+            if name_result != "No match detected":
+                camera_status = ("Access Granted",False)
+                Fbase().firebaseUpdate(
+                    keyName=formatted_date,
+                    name=result[0],
+                    data="Time In",
+                    time=formatted_time,
+                    Temp=str(app.config["target_temp"])
+                )
+    facial_status = (Name,percent)
+    return (facial_status,camera_status) 
+ 
 
 
 def facialRecognition(frame):
@@ -279,36 +350,35 @@ def Facial_Detection(camera=None, face_detector=None):
                 start_time = time.time()
             
             B,G,R = app.config["BGR"]          
-            Name,percent = app.config["FACE_RESULT"]
             
             if is_blurred:
-                cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
-                cv2.putText(frame,Name + " " + str(percent),(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
-            
+                draw_custom_face_box(frame, x, y, w, h,box_color=(B,G,R))
    
         elif len(faces) > 1:
             
             for i,(x, y, w, h) in enumerate(faces,0):
                 
-                app.config["CAMERA_STATUS"] = "Multiple person is detected",True
-                
                 try:
                     faceCrop = frame[y:y+h, x:x+w]
                     face_gray = cv2.cvtColor(faceCrop, cv2.COLOR_BGR2GRAY)
 
+                    is_blurred = detect_blur_in_face(face_gray,f"person_{i}",1500)
+        
+                    if timer >= 3:
+                        
+                        if is_blurred and faceCrop is not None:
+                            face_result,camera_status = recognize_multiple_faces(frame,faces,is_blurred)
+     
+                    if is_blurred:
+                        B,G,R = app.config["BGR"] 
+                        draw_custom_face_box(frame, x, y, w, h,box_color=(B,G,R))
+                        
+                        app.config["FACE_RESULT"] = face_result
+                        app.config["CAMERA_STATUS"] = camera_status
 
-                    is_blurred = detect_blur_in_face(face_gray,f"person_{i}",BLURRINESS_VALUE)
-                    faceCrop = face_crop(frame=frame,face_height=h,face_width=w,x=x,y=y)
-                    
-                    if is_blurred and faceCrop is not None:
-                        facialRecognition(frame=faceCrop)
                 
-                        B,G,R = app.config["BGR"]          
-                        Name,percent = app.config["FACE_RESULT"]
-            
-                        cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
-                        cv2.putText(frame,f"person_{i}: " + Name + " " + str(percent),(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
-                except:
+                except Exception as e:
+                    print(e)
                     pass   
                     
         else:
