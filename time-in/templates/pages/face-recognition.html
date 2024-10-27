@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+    <head>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>AIoT Knows Me</title>
+
+         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+         <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/face-recognition.css') }}">
+
+    </head>
+
+    <body>
+
+        <div class="container-wrapper">
+
+            <div class="container_">
+
+                <h1 id="facialStatus">AIoT Knows Me</h1>
+                <h6 id="facialStatus">Time In</h6>
+                <img id="video" />
+
+            </div>
+
+            <div class="container-fluid container_">
+
+                <div class="row">
+                    <p id="result" class="h2"></p>
+                </div>
+
+                <div class="row mb-4 justify-content-center">
+
+                    <div id="temperatureValue" class="col-6 d-flex align-items-center justify-content-center d-none">
+
+                        <svg xmlns="http://www.w3.org/2000/svg" height="30" width="30" viewBox="0 0 320 512">
+                            <path fill="#212529" d="M160 64c-26.5 0-48 21.5-48 48l0 164.5c0 17.3-7.1 31.9-15.3 42.5C86.2 332.6 80 349.5 80 368c0 44.2 35.8 80 80 80s80-35.8 80-80c0-18.5-6.2-35.4-16.7-48.9c-8.2-10.6-15.3-25.2-15.3-42.5L208 112c0-26.5-21.5-48-48-48zM48 112C48 50.2 98.1 0 160 0s112 50.1 112 112l0 164.4c0 .1 .1 .3 .2 .6c.2 .6 .8 1.6 1.7 2.8c18.9 24.4 30.1 55 30.1 88.1c0 79.5-64.5 144-144 144S16 447.5 16 368c0-33.2 11.2-63.8 30.1-88.1c.9-1.2 1.5-2.2 1.7-2.8c.1-.3 .2-.5 .2-.6L48 112zM208 368c0 26.5-21.5 48-48 48s-48-21.5-48-48c0-20.9 13.4-38.7 32-45.3l0-50.7c0-8.8 7.2-16 16-16s16 7.2 16 16l0 50.7c18.6 6.6 32 24.4 32 45.3z"/>
+                        </svg>
+             
+                        <p id="temp" class="h3">30</p>
+                        <sup class="h5">°C</sup>
+
+                    </div>
+  
+                    <div id="facePercentValue" class="col-6 d-flex align-items-center justify-content-center d-none">
+
+                        <img src="/static/icons/face-viewfinder.svg" alt="description" class="me-2">
+                        <p id="percent" class="h3 mb-0">0 %</p>
+
+                    </div>
+
+                </div>
+
+                <div class="row mb-4 justify-content-center">
+
+                    <img id="noFaceDetected" src="/static/icons/face-dizzy-svgrepo-com.svg" alt="description" class="me-2 img-fluid w-25 d-none">
+
+                    <p id="status" class="h4 circle mx-auto">   
+                        <svg xmlns="http://www.w3.org/2000/svg" height="30" width="30" viewBox="0 0 512 512">
+                            <path fill="#0d0d0d" d="M304 48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zm0 416a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM48 304a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm464-48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM142.9 437A48 48 0 1 0 75 369.1 48 48 0 1 0 142.9 437zm0-294.2A48 48 0 1 0 75 75a48 48 0 1 0 67.9 67.9zM369.1 437A48 48 0 1 0 437 369.1 48 48 0 1 0 369.1 437z"/>\
+                        </svg>
+                    </p>
+
+                </div>
+ 
+            </div>
+
+            <div class="container_">
+
+                <h3 id="">Please contact to admin to
+                    <a href="/pages/face-register">register</a>       
+                </h3> 
+
+            </div>
+    
+        </div>
+
+    </body>
+</html>

@@ -548,9 +548,9 @@ def facial_capture():
     return render_template('facial_capture.html')
 
 
-@app.route('/Time_in')
-def facial_recognition():
-    return render_template('face_recogition.html')
+@app.route('/pages/facial-recognition/recognition')
+def recognition():
+    return render_template('/facial-recognition/recognition.html')
 
 if __name__ == '__main__':
 
