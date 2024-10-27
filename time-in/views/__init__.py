@@ -1,2 +1,2 @@
-# views/__init__.py
 from .pages import pages
+from .api import api
