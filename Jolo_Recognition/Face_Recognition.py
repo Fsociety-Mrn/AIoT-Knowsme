@@ -14,7 +14,7 @@ class JoloRecognition:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
         # face detection
-        self.mtcnn  = MTCNN(image_size=160, margin=0, min_face_size=40,select_largest=False, device=self.device)
+        self.mtcnn  = MTCNN(image_size=160, margin=0, min_face_size=40,select_largest=True, device=self.device)
         
         # facial recognition
         self.facenet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
@@ -34,66 +34,86 @@ class JoloRecognition:
             range = face_match_threshold
             linear_val = 1.0 - (face_distance / (range * 2.0))
             return linear_val + ((1.0 - linear_val) * math.pow((linear_val - 0.5) * 2, 0.2)) 
-          
-    # for face recognition
-    def Face_Compare(self, face, threshold=0.6):
     
-        with torch.no_grad():
+ 
+    # for face recognition
+    def Face_Compare(self, face, person="none", threshold=0.5):
+        
+        try:
+
+            with torch.no_grad():
             
-            # check if there is detected faces
-            face,prob = self.mtcnn(face, return_prob=True)
+                # check if there is detected faces
+                face,prob = self.mtcnn(face, return_prob=True)
             
-            # check if there is face and probability of 90%
-            if face  is not None and prob > 0.90:
+                # check if there is face and probability of 90%
+                if face  is not None and prob > 0.95:
                 
                 # calculcate the face distance
-                emb  = self.facenet(face.unsqueeze(0)).detach()
+                    emb  = self.facenet(face.unsqueeze(0)).detach()
+                    
+                    # Normalize embedding
+                    emb = emb / emb.norm()
+                    match_list = []
                 
-                match_list = []
+                    # self.Embeding_List is the load data.pt 
                 
-                # self.Embeding_List is the load data.pt 
-                
-                for idx, emb_db in enumerate(self.Embeding_List):
+                    for idx, emb_db in enumerate(self.Embeding_List):
+                        
+                        # Normalize the database embedding
+                        emb_db = emb_db / emb_db.norm()
    
-                    # Calculate pairwise distance using torch.fpairwise_distance
-                    # dist = torch.cdist(emb, emb_db).item()
+                        # Calculate pairwise distance using torch.fpairwise_distance
+                        dist = torch.dist(emb, emb_db).item()
 
-                    # Calculate ecludian distance using torch.fpairwise_distance
-                    dist = torch.dist(emb, emb_db).item()
+                        # Calculate ecludian distance using torch.fpairwise_distance
+                        #dist = torch.dist(emb, emb_db).item()
                         
-                    # append the comparing result
-                    match_list.append(dist)
+                        # append the comparing result
+                        match_list.append(dist)
 
-                
-                # check if there is recognize faces               
-                if len(match_list) > 0:
+                        percent = self.__face_distance_to_conf(face_distance=dist,face_match_threshold=threshold) * 100
+                                                
+                    # check if there is recognize faces               
+                    if len(match_list) > 0:
                     
-                    # match_list is the result of comparing faces
-                    min_dist = min(match_list)
-
-                    # since it has result we need to setup the accuracy level 
-                    # threshold is the bias point number for accuracy
-                    # in this if statment we set a threshold value of 0.6
-                    # meaning all the result of comparing faces should atleast 0.6 value in order to recognize people
-                    idx_min = match_list.index(min_dist)
-                    # print(self.Name_List[idx_min], min_dist)
-                    
-                    percent = self.__face_distance_to_conf(face_distance=min_dist,face_match_threshold=threshold) * 100
-                    
-                    if min_dist < threshold:
+                        # match_list is the result of comparing faces
+                        min_dist = min(match_list)
                         
+                        
+
+                        # since it has result we need to setup the accuracy level 
+                        # threshold is the bias point number for accuracy
+                        # in this if statment we set a threshold value of 0.6
+                        # meaning all the result of comparing faces should atleast 0.6 value in order to recognize people
                         idx_min = match_list.index(min_dist)
+                        # print(self.Name_List[idx_min], min_dist)
+                    
+                        percent = self.__face_distance_to_conf(face_distance=min_dist,face_match_threshold=threshold) * 100
 
-                        return (self.Name_List[idx_min], percent)
+                     
+                        # print(f"Threshold: {min_dist < threshold} {person} {min_dist} " )
+                        if min_dist < threshold:
+                            
+                           
+                            
+                            idx_min = match_list.index(min_dist)
+                            return (self.Name_List[idx_min], str('{:.2f}%'.format(percent)))
+                        else:
+            
+                            return ("No match detected", str('{:.2f}%'.format(percent)))
+                
                     else:
-                        
-                        return ('No match detected', None)
+                        # print("No match List")
+                        return ("No match detected",  str('{:.2f}%'.format(percent)))
                 
                 else:
-                    return ('No match detected', None)
+                    # print("faces are below 90%")
+                    return ("No match detected", None)
                 
-            else:
-                ('No match detected', None)
+        except Exception as e:
+            print("error: ",e)
+            return("No match detected", None)
                 
     # training from dataset
     def Face_Train(self, Dataset_Folder="Jolo_Recognition/Registered-Faces", location="Jolo_Recognition/Model"):
@@ -114,8 +134,8 @@ class JoloRecognition:
         # load the dataset
             loader = DataLoader(
                 dataset,
+                batch_size=20,
                 collate_fn=collate_fn, 
-                # batch_size=20,
                 pin_memory=True)
 
         # create empty lists for storing embeddings and names
@@ -138,16 +158,18 @@ class JoloRecognition:
                         name_list.append(label_names[label])
                         
                         cplusplus +=1
-
+                        
+            # Normalize embeddings
+            embedding_list = [emb / emb.norm() for emb in embedding_list]
             data = [embedding_list, name_list]
 
         # save the calculated face distance into data.pt
             torch.save(data, location + '/data.pt')
-            return "Successfully trained"
+            return "Successfully trained",True
 
         except Exception as e:
             print(f"Error occurred while training the model: {str(e)}")
-            return "Error occurred while training the model"
+            return "Error occurred while training the model",False
         
         
 # uncomment this code kapag magnual training ka, 
