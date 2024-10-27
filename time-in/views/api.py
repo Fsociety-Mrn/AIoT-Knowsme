@@ -1,4 +1,4 @@
-from flask import Blueprint,jsonify
+from flask import Blueprint,jsonify, request
 
 import serial
 import time
@@ -6,7 +6,6 @@ import time
 
 
 api = Blueprint('api', __name__)
-
 
 @api.route('/api/serial-ir', methods=['GET'])
 def serial_ir():
@@ -25,3 +24,5 @@ def serial_ir():
     
     except:
         return jsonify("33,1")
+    
+  

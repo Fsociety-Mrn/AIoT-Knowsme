@@ -12,7 +12,7 @@ let intervalFaceStatus;
 
 async function getFaceStatus(){
      
-    const response = await fetch('/api/face/status');
+    const response = await fetch('/api/face-register/status');
     const data = await response.json();
 
     if (data === true){
@@ -36,15 +36,29 @@ function showTempatureStatus(temperatureResult){
 }
 
 function normalTemperature(){
-    temperatureValue.innerHTML = data.split(',')[0] + "<sup style=\"vertical-align: top; font-size: 60%;\">°C</sup>";
-    temperatureValue.style.color = 'blue';
-    temperatureContainer.style.color = 'blue';
-    temperatureStatus.innerHTML = "Great! Your temperature is <strong>normal</strong>.";
-
     temperatureHigh.classList.add('hidden'); 
     temperatureWarning.classList.add('hidden'); 
     temperatureNormal.classList.remove('hidden'); 
+}
 
+function warningTemperature(){
+    temperatureHigh.classList.add('hidden'); 
+    temperatureWarning.classList.remove('hidden');
+    temperatureNormal.classList.add('hidden'); 
+}
+
+function highTemperature(){
+    temperatureHigh.classList.remove('hidden'); 
+    temperatureWarning.classList.add('hidden');
+    temperatureNormal.classList.add('hidden'); 
+}
+
+function showTemperatureData(temperatureResult, colorStatus='blue', statusText="Great! Your temperature is <strong>normal</strong>."){
+
+    temperatureValue.innerHTML = `${temperatureResult}<sup style=\"vertical-align: top; font-size: 60%;\">°C</sup>`;
+    temperatureValue.style.color = colorStatus;
+    temperatureContainer.style.color = colorStatus;
+    temperatureStatus.innerHTML = statusText;
 }
 
 
@@ -60,26 +74,18 @@ async function getSerialIr(){
         location.href = "/pages/face-recognition";
     }
 
-    
+
+    showTemperatureData(temperatureResult);
+    normalTemperature();
 
     if (parseFloat(data.split(',')[0]) >= 36 && parseFloat(data.split(',')[0]) <= 38 ){
-        document.getElementById('temperature').style.color = '#FFA000';
-        document.getElementById('temp_status_container').style.color = '#FFA000';
-        document.getElementById('temp_status').innerHTML = "Caution! Your temperature is <strong>slightly high</strong>.";
-
-        document.getElementById('high').classList.add('hidden'); 
-        document.getElementById('warning').classList.remove('hidden');
-        document.getElementById('normal').classList.add('hidden'); 
+        showTemperatureData(temperatureResult,'#FFA000', "Caution! Your temperature is <strong>slightly high</strong>.");
+        warningTemperature();
     }
 
     if (parseFloat(data.split(',')[0]) > 39){
-        document.getElementById('temperature').style.color = 'red';
-        document.getElementById('temp_status_container').style.color = 'red';
-        document.getElementById('temp_status').textContent = "Attention! Your <strong>temperature is high</strong>.";
-
-        document.getElementById('high').classList.remove('hidden'); // Hide high icon
-        document.getElementById('warning').classList.add('hidden'); // Hide warning icon
-        document.getElementById('normal').classList.add('hidden'); // Show normal icon
+        showTemperatureData(temperatureResult,'red', "Attention! Your <strong>temperature is high</strong>.");
+        highTemperature();
     }
     
 }
@@ -109,14 +115,14 @@ function startInterval() {
 
     intervalTimeAndDate = setInterval(updateTimeAndDate, 1000);
     intervalSerialIr = setInterval(getSerialIr, 1000);
-    // intervalFaceStatus = setInterval(getFaceStatus, 500);
+    intervalFaceStatus = setInterval(getFaceStatus, 500);
 
 }
 
 function stopInterval(){
     clearInterval(intervalTimeAndDate);
     clearInterval(intervalSerialIr);
-    // clearInterval(intervalFaceStatus);
+    clearInterval(intervalFaceStatus);
 }
 
 updateTimeAndDate();
