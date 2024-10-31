@@ -30,7 +30,7 @@ function showErrorForm(){
 async function idValidate(event){
     event.preventDefault();
 
-    const response = await fetch('/api/id-verifications', {
+    const response = await fetch('/api/face-register/id-verifications', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -42,8 +42,8 @@ async function idValidate(event){
 
 
     if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
         showErrorForm();
+        throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
     const data = await response.json();
