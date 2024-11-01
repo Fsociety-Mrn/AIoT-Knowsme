@@ -1,1 +1,2 @@
 from .img_storage_manager import ImageStorageManager
+from .face_settings import FaceSettings

@@ -33,3 +33,19 @@ class ImageStorageManager:
         os.makedirs(folder_path)
     
         return folder_path
+    
+    
+    def save_images(self, cv2, capture, save_directory):
+        
+        image_count = int(len(os.listdir(save_directory)))
+        
+        if not image_count == 20:
+            
+            image_count += 1
+            image_path = os.path.join(save_directory, f"{image_count}.png")
+            cv2.imwrite(image_path, capture)
+            
+            return (False,image_count)
+        
+        return (True, image_count)
+
