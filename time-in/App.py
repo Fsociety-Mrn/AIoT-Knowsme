@@ -1,5 +1,5 @@
 # app.py
-from flask import Flask, url_for,redirect
+from flask import Flask
 from views import pages,api,face_register
 from flask_cors import CORS
 

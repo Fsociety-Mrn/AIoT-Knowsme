@@ -17,7 +17,7 @@ function showSuccessForm(){
 
     formContainer.classList.add('d-none');
     facialRegistrationContainer.classList.remove('d-none')
-    // facialVideo.src = "{{ url_for('face_register') }}"
+    facialVideo.src = src="/api/face-register/detect-face"
 }
 
 
@@ -55,7 +55,7 @@ async function idValidate(event){
 
 async function getCameraStatusAndCounter(){
 
-    const response = await fetch('/api/capture-counter');
+    const response = await fetch('/api/face-register/capture-counter');
     const data =  await response.json();
 
     if (data.is_camera_connected == false){
@@ -69,7 +69,7 @@ async function getCameraStatusAndCounter(){
 
 async function proceedToFacialTraining(){
 
-    const response = await fetch('/status');
+    const response = await fetch('/api/face-register/status');
     const data =  await response.json();
 
     if (data === "sending"){

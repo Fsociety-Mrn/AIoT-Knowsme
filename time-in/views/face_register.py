@@ -19,10 +19,23 @@ BLURRINESS_VALUE = 0
 
 config = {
     "training": False,
-    "folder_path": None
+    "folder_path": None,
+    "capture_count": 0,
+    "camera_status": ("", False),
 }
 
-
+@face_register.route('/api/face-register/capture-counter', methods=["GET"])
+def capture_counter():
+    
+    camera_msg,is_camera = config["camera_status"]
+    
+    return json({
+                "is_camera_connected" : is_camera,
+                "capture_counter":config['capture_count'],
+                "camera_message" : camera_msg
+            })
+    
+    
 @face_register.route('/api/face-register/status', methods=['GET'])
 def status():
     return json(config["training"])
@@ -57,13 +70,13 @@ def id_verifications():
     
         if not response.status_code == 200:
             return response.json(), response.status_code
-    
+        config["training"] = "process"
         return json({"message": f"Folder {name} created successfully"}), 200
 
     except Exception as e:
         return json({"message": e}), 500
-    
-    
+ 
+   
 @face_register.route('/api/face-register/detect-face')
 def facial_register(): 
     
@@ -84,7 +97,7 @@ def facial_register_camera(camera, face_detector):
 
     direction = 1
     speed = 2
-    line_y_position = None
+    line_y = None
 
     while True:
         ret, frame = camera.read()
@@ -92,31 +105,63 @@ def facial_register_camera(camera, face_detector):
         if not ret:
             break
 
-        flipped_frame = cv2.flip(frame, 1)
-        grayscale_frame = cv2.cvtColor(flipped_frame, cv2.COLOR_BGR2GRAY)
+        frame = cv2.flip(frame, 1)
+        grayscale_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         detected_faces = face_detector.detectMultiScale(
-                                        grayscale_frame, scaleFactor=1.1, minNeighbors=20, minSize=(150, 150),
+                                        grayscale_frame, 
+                                        scaleFactor=1.1, 
+                                        minNeighbors=20, 
+                                        minSize=(150, 150),
                                         flags=cv2.CASCADE_SCALE_IMAGE)
-
+ 
         if len(detected_faces) == 1:
             
             x, y, width, height = detected_faces[0]
-            face_crop = flipped_frame[y:y+height, x:x+width]
-
-            face_crop = face_settings().face_crop(
-                                            frame=flipped_frame, 
-                                            face_height=height, 
-                                            face_width=width,   
-                                            xy=(x, y)
-                                        )
+            face_crop = frame[y:y+height, x:x+width]
+                    
+            face_crop = face_settings().face_crop(frame,x,y,width,height)
+            is_blurred = face_settings().is_face_blurry(cv2, face_crop, BLURRINESS_VALUE)
 
             timer += time.time() - start_time
             start_time = time.time()
 
-            if face_settings().is_face_blurry(cv2, face_crop, BLURRINESS_VALUE):
-                if timer > 3:
-                    timer = 0
+            if is_blurred:
 
-        _, encoded_frame = cv2.imencode('.png', flipped_frame)
+                if timer >= 0.5:
+                    is_capture_done,image_count = image_storage_manager().save_images(cv2,face_crop,config["folder_path"])
+                    config['capture_count'] = image_count
+                    
+                    if is_capture_done:
+                        config["training"] = "sending"
+                        break
+                
+                    timer = 0
+                    start_time = time.time()
+                    
+                if line_y is None:
+                    line_y = y + (height // 2)
+                    
+                face_settings().draw_custom_face_box(
+                                    cv2=cv2, 
+                                    frame=frame, 
+                                    x=x, 
+                                    y_face=y, 
+                                    w=width, 
+                                    h=height, 
+                                    line_y=line_y, 
+                                    scan=True,
+                                    scanColor=(0,255,255)
+                                )
+                    
+                line_y += speed * direction
+
+                if line_y >= y + height:
+                    direction = -1
+                elif line_y <= y:
+                    direction = 1
+                    
+                config["CAMERA_STATUS"] = ("Please align your face properly.",False) if is_blurred else ("Oops! Your camera's not in focus. Try moving it or wiping the lens",False)
+
+        _, encoded_frame = cv2.imencode('.png', frame)
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + encoded_frame.tobytes() + b'\r\n')

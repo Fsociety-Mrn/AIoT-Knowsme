@@ -1,10 +1,7 @@
 
 
 class FaceSettings:
-    
-    def is_camera_detected(self):
-        
-        return self._camera.isOpened()
+
 
     def is_face_blurry(self,cv2, face_crop, blurred_threshold=1000):
         
@@ -13,11 +10,10 @@ class FaceSettings:
         variance = laplacian.var()
         return variance > blurred_threshold
 
-    def face_crop(frame,face_height,face_width,xy=(0,0)):
+    def face_crop(self,frame,x,y,face_width,face_height):
     
         try:
-            x,y=xy
-            
+
             scale_factor = 1.2
             new_w = int(face_width * scale_factor)
             new_h = int(face_height * scale_factor)
@@ -28,12 +24,25 @@ class FaceSettings:
             face_crop = frame[new_y-40:new_y+new_h+30, new_x-40:new_x+new_w+30]
                     
             return face_crop
-        except:
-            pass
+        except Exception as e:
+            print(f"Error in face_crop: {e}")
+
             return None
 
-    def draw_custom_box(self, frame, face_rect, color=(0, 255, 0), thickness=2):
+    def draw_custom_face_box(self,cv2,frame, x, y_face, w, h, line_y = None, box_color = (255, 255, 255), scan = False, scanColor=(255, 215, 0)):
         
-        x, y, w, h = face_rect
-        cv2.rectangle(frame, (x, y), (x+w, y+h), color, thickness)
-        # Add custom box logic here, such as drawing a circle or an ellipse
+        line_thickness = 2
+        corner_length = 30  # Length of the corner lines
+
+
+        def draw_corner(x,y,coordinates_x,coordinates_y):
+            cv2.line(frame, (x, y), coordinates_x, box_color, line_thickness)
+            cv2.line(frame, (x, y), coordinates_y, box_color, line_thickness)
+
+        draw_corner(x, y_face,(x + corner_length, y_face), (x, y_face + corner_length))    
+        draw_corner(x + w, y_face,(x + w - corner_length, y_face), (x + w, y_face + corner_length))
+        draw_corner(x, y_face + h, (x + corner_length, y_face + h), (x, y_face + h - corner_length))
+        draw_corner(x + w, y_face + h, (x + w - corner_length, y_face + h),(x + w, y_face + h - corner_length))
+
+        if scan:
+            cv2.line(frame, (x, line_y), (x + w, line_y), scanColor, 2)
