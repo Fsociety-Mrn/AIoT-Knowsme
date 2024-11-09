@@ -16,7 +16,7 @@ import serial
 app = Flask(__name__)
  
 API_ENDPOINT_TIME_IN = "http://192.168.0.101:1000"
-RECOGNITION_THRESHOLD = 0.55
+RECOGNITION_THRESHOLD = 0.9
 BLURRINESS_VALUE = 0
  
 CORS(app, resources={r"/*": {"origins": ["http://127.0.0.1:1000", API_ENDPOINT_TIME_IN]}})
