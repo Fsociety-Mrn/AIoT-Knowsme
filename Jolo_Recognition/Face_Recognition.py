@@ -95,17 +95,15 @@ class JoloRecognition:
                         # print(f"Threshold: {min_dist < threshold} {person} {min_dist} " )
                         if min_dist < threshold:
                             
-                           
-                            
                             idx_min = match_list.index(min_dist)
-                            return (self.Name_List[idx_min], str('{:.2f}%'.format(percent)))
+                            return (self.Name_List[idx_min], str('{:.2f}%'.format(min_dist)))
                         else:
             
-                            return ("No match detected", str('{:.2f}%'.format(percent)))
+                            return ("No match detected", str('{:.2f}%'.format(min_dist)))
                 
                     else:
-                        # print("No match List")
-                        return ("No match detected",  str('{:.2f}%'.format(percent)))
+                    
+                        return ("No match detected",  str('{:.2f}%'.format(min_dist)))
                 
                 else:
                     # print("faces are below 90%")
